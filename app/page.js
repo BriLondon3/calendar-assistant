@@ -1,11 +1,7 @@
-function CalendarIcon() {
-  return <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="4" stroke="currentColor" strokeWidth="1.6"/><path d="M7 3v4m10-4v4M3 11h18m-13 5 2.5 2.5L16 14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>;
-}
-
 export default function Home() {
   return (
     <div className="site">
-      <header><a className="brand" href="/" aria-label="Calendar Assistant home"><span className="logo"><CalendarIcon /></span>calendar assistant<span className="brand-dot">.</span></a><span className="header-note">A little more time for you</span></header>
+      <header><a className="brand" href="/" aria-label="Calendar Assistant home"><span className="logo"><img src="/calendar-assistant-logo.png" alt="" width="157" height="157" /></span>calendar assistant<span className="brand-dot">.</span></a><span className="header-note">A little more time for you</span></header>
       <main>
         <section className="intro" aria-labelledby="headline">
           <div className="eyebrow"><span /> LESS JUGGLING. MORE LIVING.</div>
