@@ -1,8 +1,8 @@
 import './globals.css';
 
 export const metadata = {
-  title: 'Calendar Assistant — Make room for what matters',
-  description: 'A little help for your busy day. Calendar Assistant helps you organize your schedule and make time for what matters.',
+  title: 'Booked and Busy — Screenshot it. Schedule it.',
+  description: 'Turn screenshots from group chats, GroupMe, Flare, flyers, and invites into calendar events. Review details, spot conflicts, and add your plans to Google Calendar.',
 };
 
 export default function RootLayout({ children }) {

@@ -1,6 +1,6 @@
-# Calendar Assistant
+# Booked and Busy
 
-A simple Next.js homepage for Calendar Assistant, by Bri London.
+A simple Next.js homepage for Booked and Busy, by Bri London.
 
 ## Local development
 
