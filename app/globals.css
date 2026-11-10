@@ -19,6 +19,47 @@ h1 em{font-style:normal;color:var(--blue)}
 .description p{font-size:17px;line-height:1.75;color:var(--muted);margin:0 0 20px}
 .description p:last-child{margin-bottom:0}
 .description .intro-label{color:var(--ink);font-weight:600;font-size:18px;margin-bottom:12px}
+
+.plan-cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 18px;
+  margin-top: 28px;
+}
+
+.plan-cta p { flex-basis: 100%; margin: 0; color: var(--muted); }
+.plan-cta strong { color: var(--ink); font-size: 24px; }
+.plan-cta a:not(.primary-button), .auth-card a { color: #125bb4; }
+
+.primary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 20px;
+  border: 0;
+  border-radius: 10px;
+  background: #1265ca;
+  color: white;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.primary-button:hover { background: #0d55ac; }
+.primary-button:disabled, .text-button:disabled { opacity: .65; cursor: wait; }
+.auth-page { display: grid; grid-template-columns: 1fr; place-items: center; min-height: 100svh; padding: 24px; }
+.auth-card { width: min(100%, 460px); padding: clamp(22px, 6vw, 40px); border: 1px solid var(--line); border-radius: 20px; background: white; }
+.auth-card h1 { font-size: clamp(28px, 6vw, 38px); letter-spacing: -1px; margin: 20px 0 12px; }
+.auth-card p { line-height: 1.55; color: var(--muted); overflow-wrap: anywhere; }
+.auth-card .auth-plan { color: var(--ink); }
+.auth-form { display: grid; gap: 12px; margin: 24px 0; }
+.auth-form label { font-weight: 600; }
+.auth-form input { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid #8294a8; border-radius: 8px; font: inherit; }
+.auth-card .auth-error { margin: 0; color: #9d281a; }
+.text-button { border: 0; background: transparent; color: #125bb4; font: inherit; text-decoration: underline; cursor: pointer; }
 .hero-artwork{width:100%;min-width:0}
 .hero-artwork img{display:block;width:100%;height:auto;border-radius:16px}
 .how-it-works{grid-column:1/-1;padding-top:44px;border-top:1px solid var(--line)}

@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 export default function Home() {
   return (
     <div className="site">
@@ -9,6 +11,11 @@ export default function Home() {
             <p className="intro-label">Your event assistant</p>
             <p>Turn screenshots from group chats, GroupMe, Flare, flyers, and invites into calendar events automatically.</p>
             <p>Review the details, spot conflicts, and add the plans you want to Google Calendar.</p>
+          </div>
+          <div className="plan-cta">
+            <p><strong>$2.99</strong> / month</p>
+            <Link className="primary-button" href="/signup">Sign up</Link>
+            <Link href="/signup?mode=login">Log in</Link>
           </div>
         </section>
         <div className="hero-artwork">
