@@ -77,7 +77,7 @@ export async function POST(request) {
   try { new Intl.DateTimeFormat('en', { timeZone }); } catch { timeZone = 'UTC'; }
 
   try {
-    const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+    const model = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
     if (!/^[a-z0-9.-]+$/.test(model)) return json({ error: 'The AI model configuration needs attention.' }, 503);
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
       method: 'POST',
@@ -97,6 +97,10 @@ export async function POST(request) {
       signal: AbortSignal.timeout(45000),
       cache: 'no-store',
     });
+    if (!response.ok) {
+      console.error('Gemini extraction request failed', { status: response.status, model });
+    }
+    if (response.status === 404) return json({ error: 'The selected Gemini model isn’t available for this project. Please check the GEMINI_MODEL setting in Vercel.' }, 502);
     if (response.status === 429) return json({ error: 'The AI usage limit was reached. Check Gemini quota or billing, then try again later.' }, 429);
     if (response.status === 400 || response.status === 401 || response.status === 403) return json({ error: 'Gemini rejected the request. Check the API key, model access, and billing in Google AI Studio.' }, 502);
     if (!response.ok) return json({ error: 'Gemini is unavailable right now. Try again shortly.' }, 502);
