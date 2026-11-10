@@ -59,8 +59,8 @@ export async function disconnectGoogleCalendar() {
   const { data: { user } } = await client.auth.getUser();
   if (!user) redirect('/signup?mode=login');
   const { error } = await client.from('google_calendar_connections').delete().eq('user_id', user.id);
-  if (error) redirect('/account?calendar=disconnect-failed');
-  redirect('/account');
+  if (error) redirect('/calendar?calendar=disconnect-failed');
+  redirect('/calendar');
 }
 
 export async function logout() {

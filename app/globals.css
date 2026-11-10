@@ -92,6 +92,29 @@ footer strong{font-weight:600;color:var(--ink)}.footer-star{color:#ff7b24;font-s
 @media(max-width:450px){.brand{font-size:18px}.logo{margin-right:0}h1{font-size:42px;letter-spacing:-2px}.description p{font-size:16px}.description .intro-label{font-size:17px}.how-it-works h2{font-size:26px}.steps h3{font-size:18px}footer{align-items:flex-start;flex-direction:column;justify-content:center;gap:8px;padding:20px 0;font-size:12px}}
 
 .workspace { max-width: 1120px; margin: auto; padding: 0 6%; }
+.app-header {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 28px;
+}
+.app-navigation { display: flex; justify-content: flex-end; align-items: center; gap: 24px; }
+.app-navigation a { color: var(--muted); font-size: 14px; font-weight: 500; text-decoration: none; padding: 10px 0; }
+.app-navigation a:hover, .app-navigation a[aria-current="page"] { color: #125bb4; }
+.app-navigation a[aria-current="page"] { box-shadow: 0 2px #1677ed; }
+.account-avatar { display: block; border-radius: 50%; text-decoration: none; }
+.profile-photo { display: grid; place-items: center; width: 44px; height: 44px; border: 2px solid white; border-radius: 50%; overflow: hidden; background: #dfedff; color: #125bb4; font-weight: 700; box-shadow: 0 0 0 1px var(--line); }
+.profile-photo img { width: 100%; height: 100%; object-fit: cover; }
+.account-avatar[aria-current="page"] .profile-photo { box-shadow: 0 0 0 2px #1677ed; }
+.account-avatar:focus-visible { outline: 3px solid #1677ed; outline-offset: 4px; }
+.calendar-page, .account-page { display: block; min-height: 75svh; padding: 44px 0 64px; }
+.calendar-page .auth-card, .account-page .auth-card { margin: 0 auto; }
+.calendar-page .calendar-section { border: 0; margin: 0; padding: 0; }
+.calendar-page .calendar-section form + form { margin-top: 12px; }
+@media(max-width:900px) {
+  .app-header { height: auto; min-height: 100px; padding: 16px 0; grid-template-columns: 1fr auto; gap: 12px; }
+  .app-navigation { grid-row: 2; grid-column: 1 / -1; justify-content: flex-start; flex-wrap: wrap; }
+  .account-avatar { grid-column: 2; grid-row: 1; }
+}
 .workspace-nav { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; min-height: 100px; border-bottom: 1px solid var(--line); }
 .workspace-nav > div { display: flex; align-items: center; gap: 24px; }
 .workspace-nav a:not(.brand) { color: #125bb4; }

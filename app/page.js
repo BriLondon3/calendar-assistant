@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { getCurrentUser } from './auth-client';
+import SiteHeader from './components/site-header';
 
 export const dynamic = 'force-dynamic';
 
@@ -7,7 +8,7 @@ export default async function Home() {
   const user = await getCurrentUser();
   return (
     <div className="site">
-      <header><a className="brand" href="/" aria-label="Booked and Busy home"><span className="logo"><img src="/calendar-assistant-logo.png" alt="" width="157" height="157" /></span>Booked and Busy<span className="brand-dot">.</span></a><span className="header-note">Screenshot it. Schedule it.</span></header>
+      <SiteHeader user={user} />
       <main>
         <section className="intro" aria-labelledby="headline">
           <h1 id="headline">Screenshot it.<br /><em>Schedule it.</em></h1>

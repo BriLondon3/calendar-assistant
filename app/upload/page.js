@@ -1,7 +1,6 @@
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '../auth-client';
-import { logout } from '../signup/actions';
+import SiteHeader from '../components/site-header';
 import ScreenshotPicker from './screenshot-picker';
 
 export const dynamic = 'force-dynamic';
@@ -12,13 +11,7 @@ export default async function UploadPage() {
 
   return (
     <div className="workspace">
-      <nav className="workspace-nav" aria-label="Main navigation">
-        <Link className="brand" href="/">Booked and Busy<span className="brand-dot">.</span></Link>
-        <div>
-          <Link href="/account">Account &amp; Calendar</Link>
-          <form action={logout}><button className="text-button" type="submit">Sign out</button></form>
-        </div>
-      </nav>
+      <SiteHeader user={user} active="upload" />
       <main className="upload-page">
         <ol className="workflow" aria-label="Event workflow">
           <li aria-current="step"><span>1</span>Upload screenshots</li>

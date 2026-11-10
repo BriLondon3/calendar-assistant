@@ -27,10 +27,10 @@ export async function GET(request) {
         try {
           await saveCalendarConnection(client, data.session);
         } catch {
-          redirect('/account?calendar=save-failed');
+          redirect('/calendar?calendar=save-failed');
         }
       }
-      redirect(destination === 'calendar' ? '/account' : '/upload');
+      redirect(destination === 'calendar' ? '/calendar' : '/upload');
     }
     console.error('Google sign-in session exchange failed', {
       code: error.code,
