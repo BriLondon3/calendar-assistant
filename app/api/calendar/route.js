@@ -33,10 +33,17 @@ export async function GET(request) {
     singleEvents: 'true',
     orderBy: 'startTime',
     maxResults: '2500',
-    fields: 'nextPageToken,summary,items(id,summary,start,end,location,status,transparency)',
+    fields: 'nextPageToken,summary,items(id,summary,start,end,location,status,transparency,colorId)',
   });
 
   try {
+    const headers = { Authorization: `Bearer ${access.token}` };
+    const [colorsResponse, calendarResponse] = await Promise.all([
+      fetch('https://www.googleapis.com/calendar/v3/colors', { headers, cache: 'no-store', signal: AbortSignal.timeout(15000) }),
+      fetch('https://www.googleapis.com/calendar/v3/users/me/calendarList/primary?fields=backgroundColor,foregroundColor', { headers, cache: 'no-store', signal: AbortSignal.timeout(15000) }),
+    ]);
+    const colors = colorsResponse.ok ? await colorsResponse.json() : {};
+    const calendarColor = calendarResponse.ok ? await calendarResponse.json() : { backgroundColor: '#039be5', foregroundColor: '#ffffff' };
     const events = [];
     let pageToken;
     let calendarName;
@@ -56,7 +63,15 @@ export async function GET(request) {
       pageToken = data.nextPageToken;
     } while (pageToken);
 
-    return json({ events, calendarName });
+    const coloredEvents = events.map(event => {
+      const color = colors.event?.[event.colorId];
+      return {
+        ...event,
+        backgroundColor: color?.background || calendarColor.backgroundColor,
+        foregroundColor: color?.foreground || calendarColor.foregroundColor,
+      };
+    });
+    return json({ events: coloredEvents, calendarName, calendarColorAvailable: calendarResponse.ok });
   } catch {
     return json({ error: 'Couldn’t load Google Calendar. Try again shortly.' }, 502);
   }
