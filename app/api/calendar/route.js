@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers';
 import { authConfigured, createAuthClient } from '../../auth-client';
+import { getCalendarAccess } from '../../calendar-connection';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,8 +23,9 @@ export async function GET(request) {
     return json({ error: 'Choose a valid calendar day.' }, 400);
   }
 
-  const { data: { session } } = await client.auth.getSession();
-  if (!session?.provider_token) return json({ error: 'Connect Google Calendar to load your plans.', reconnect: true }, 403);
+  const access = await getCalendarAccess(client, user.id);
+  if (access.error) return json({ error: access.error }, 503);
+  if (!access.token) return json({ error: 'Connect Google Calendar to load your plans.', reconnect: true }, 403);
 
   const query = new URLSearchParams({
     timeMin: start.toISOString(),
@@ -41,7 +43,7 @@ export async function GET(request) {
     do {
       if (pageToken) query.set('pageToken', pageToken);
       const response = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events?${query}`, {
-        headers: { Authorization: `Bearer ${session.provider_token}` },
+        headers: { Authorization: `Bearer ${access.token}` },
         cache: 'no-store',
         signal: AbortSignal.timeout(15000),
       });

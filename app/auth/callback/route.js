@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { authConfigured, createWritableAuthClient } from '../../auth-client';
+import { saveCalendarConnection } from '../../calendar-connection';
 
 export async function GET(request) {
   const params = new URL(request.url).searchParams;
@@ -17,11 +18,18 @@ export async function GET(request) {
 
   if (code && authConfigured()) {
     const client = await createWritableAuthClient();
-    const { error } = await client.auth.exchangeCodeForSession(code);
+    const { data, error } = await client.auth.exchangeCodeForSession(code);
     if (!error) {
       const jar = await cookies();
       const destination = jar.get('oauth-destination')?.value;
       jar.delete('oauth-destination');
+      if (destination === 'calendar') {
+        try {
+          await saveCalendarConnection(client, data.session);
+        } catch {
+          redirect('/account?calendar=save-failed');
+        }
+      }
       redirect(destination === 'calendar' ? '/account' : '/upload');
     }
     console.error('Google sign-in session exchange failed', {

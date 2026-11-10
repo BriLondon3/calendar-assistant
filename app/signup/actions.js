@@ -32,7 +32,7 @@ async function startGoogleSignIn(calendarAccess = false) {
       redirectTo: new URL('/auth/callback', siteOrigin).href,
       ...(calendarAccess && {
         scopes: 'https://www.googleapis.com/auth/calendar.events.owned',
-        queryParams: { prompt: 'consent', include_granted_scopes: 'true' },
+        queryParams: { prompt: 'consent', access_type: 'offline', include_granted_scopes: 'true' },
       }),
     },
   });
@@ -51,6 +51,16 @@ export async function connectGoogleCalendar() {
   const { data: { user } } = await client.auth.getUser();
   if (!user) redirect('/signup?mode=login');
   await startGoogleSignIn(true);
+}
+
+export async function disconnectGoogleCalendar() {
+  if (!authConfigured()) redirect('/signup');
+  const client = await createWritableAuthClient();
+  const { data: { user } } = await client.auth.getUser();
+  if (!user) redirect('/signup?mode=login');
+  const { error } = await client.from('google_calendar_connections').delete().eq('user_id', user.id);
+  if (error) redirect('/account?calendar=disconnect-failed');
+  redirect('/account');
 }
 
 export async function logout() {

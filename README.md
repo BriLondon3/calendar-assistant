@@ -35,4 +35,11 @@ Enable the Google Calendar API in the Google Cloud project used for sign-in. Whi
 
 From `/account`, choose **Connect Google Calendar** and grant Calendar access. The account page shows the selected day from the signed-in Google account’s primary calendar, using the browser’s time zone. Choose the same Google account when reconnecting.
 
-The initial connection uses the Google access token held in the server-only session cookie. When the token expires or is lost during a session refresh, users reconnect using the button. Persistent Google token refresh and the screenshot review/add/reject workflow are still pending. Calendar data is fetched on demand without shared caching.
+### Save connections across logins
+
+1. Run `supabase/calendar-connection.sql` in the Supabase SQL Editor. It creates an encrypted-token table with per-user Row Level Security. Enable the Data API under Supabase Integrations → Data API so the server can read this table through the signed-in user's session. Leave automatic exposure of new tables disabled.
+2. Add `GOOGLE_OAUTH_CLIENT_ID` and `GOOGLE_OAUTH_CLIENT_SECRET` to Vercel. Use the same web OAuth client credentials configured in the Supabase Google provider.
+3. Generate a 32-byte encryption key with `node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"`. Save the output as `GOOGLE_TOKEN_ENCRYPTION_KEY` in Vercel. Keep this stable across deployments. Changing it makes saved tokens unreadable and requires users to reconnect. Use the same variables in `.env.local` for local testing.
+4. Redeploy and connect Google Calendar once more to grant offline access. New connections are encrypted using AES-256-GCM, bound to the user's ID, and stored in the private per-user table. Calendar access tokens are refreshed on demand. Signing out preserves the saved connection. Disconnect removes it from the app.
+
+Until all three new environment variables are set, the existing short-lived connection remains available. After enabling saved connections, users must connect once to save a refresh token. Google can still revoke refresh tokens. OAuth applications in Testing generally have refresh tokens that expire after seven days for Calendar scopes. Production publishing and any required Google verification are separate setup steps. The screenshot review/add/reject workflow is still pending.
