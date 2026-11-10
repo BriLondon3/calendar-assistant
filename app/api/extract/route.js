@@ -100,6 +100,7 @@ export async function POST(request) {
     if (!response.ok) {
       console.error('Gemini extraction request failed', { status: response.status, model });
     }
+    if (response.status === 402) return json({ error: 'Gemini requires billing or available credits on the Google AI Studio project for this API key. Check its billing status, then try again.' }, 402);
     if (response.status === 404) return json({ error: 'The selected Gemini model isn’t available for this project. Please check the GEMINI_MODEL setting in Vercel.' }, 502);
     if (response.status === 429) return json({ error: 'The AI usage limit was reached. Check Gemini quota or billing, then try again later.' }, 429);
     if (response.status === 400 || response.status === 401 || response.status === 403) return json({ error: 'Gemini rejected the request. Check the API key, model access, and billing in Google AI Studio.' }, 502);
