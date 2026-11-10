@@ -14,7 +14,7 @@ function eventTime(event, timeZone) {
   return `${format.format(new Date(event.start.dateTime))} – ${format.format(new Date(event.end.dateTime))}`;
 }
 
-export default function CalendarDay() {
+export default function CalendarDay({ initialDate }) {
   const [date, setDate] = useState('');
   const [timeZone, setTimeZone] = useState('');
   const [result, setResult] = useState(null);
@@ -30,9 +30,9 @@ export default function CalendarDay() {
   }, [result, date]);
 
   useEffect(() => {
-    setDate(localDateString(new Date()));
+    setDate(initialDate || localDateString(new Date()));
     setTimeZone(Intl.DateTimeFormat().resolvedOptions().timeZone);
-  }, []);
+  }, [initialDate]);
 
   useEffect(() => {
     if (!date) {
