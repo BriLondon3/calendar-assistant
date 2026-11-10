@@ -4,6 +4,14 @@ import { continueWithGoogle } from './actions';
 
 export const dynamic = 'force-dynamic';
 
+const errorMessages = {
+  unavailable: 'Account access isn’t available yet.',
+  provider: 'Google authorization couldn’t be completed. Please try again. Reference G1.',
+  session: 'Your sign-in session expired or cookies were blocked. Start again here in the same browser. Reference G2.',
+  exchange: 'We couldn’t finish signing you in. Please try again. Reference G3.',
+  callback: 'The sign-in response was incomplete. Start again here. Reference G4.',
+};
+
 export default async function SignupPage({ searchParams }) {
   const { mode, error } = await searchParams;
   const login = mode === 'login';
@@ -17,7 +25,7 @@ export default async function SignupPage({ searchParams }) {
         {authConfigured() ? (
           <>
             <p>Use your Google account to continue.</p>
-            {error && <p role="alert" className="auth-error">{error === 'unavailable' ? 'Account access isn’t available yet.' : 'Google sign-in couldn’t be completed. Try again.'}</p>}
+            {error && <p role="alert" className="auth-error">{Object.hasOwn(errorMessages, error) ? errorMessages[error] : 'Google sign-in couldn’t be completed. Try again.'}</p>}
             <form className="auth-form" action={continueWithGoogle}>
               <button className="primary-button" type="submit">Continue with Google</button>
             </form>
