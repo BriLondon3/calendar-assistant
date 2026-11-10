@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
 import { authConfigured, createWritableAuthClient } from '../../auth-client';
 
 export async function GET(request) {
@@ -17,7 +18,12 @@ export async function GET(request) {
   if (code && authConfigured()) {
     const client = await createWritableAuthClient();
     const { error } = await client.auth.exchangeCodeForSession(code);
-    if (!error) redirect('/account');
+    if (!error) {
+      const jar = await cookies();
+      const destination = jar.get('oauth-destination')?.value;
+      jar.delete('oauth-destination');
+      redirect(destination === 'calendar' ? '/account' : '/upload');
+    }
     console.error('Google sign-in session exchange failed', {
       code: error.code,
       status: error.status,

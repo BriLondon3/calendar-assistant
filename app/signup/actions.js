@@ -1,6 +1,6 @@
 'use server';
 
-import { headers } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { authConfigured, createWritableAuthClient } from '../auth-client';
 
@@ -18,6 +18,14 @@ async function startGoogleSignIn(calendarAccess = false) {
   if (origin !== siteOrigin) redirect(new URL('/signup', siteOrigin).href);
 
   const client = await createWritableAuthClient();
+  const jar = await cookies();
+  jar.set('oauth-destination', calendarAccess ? 'calendar' : 'upload', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 600,
+  });
   const { data, error } = await client.auth.signInWithOAuth({
     provider: 'google',
     options: {

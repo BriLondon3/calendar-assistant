@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { authConfigured } from '../auth-client';
 import { continueWithGoogle } from './actions';
+import { getCurrentUser } from '../auth-client';
+import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,6 +16,7 @@ const errorMessages = {
 
 export default async function SignupPage({ searchParams }) {
   const { mode, error } = await searchParams;
+  if (!error && await getCurrentUser()) redirect('/upload');
   const login = mode === 'login';
 
   return (

@@ -1,6 +1,10 @@
 import Link from 'next/link';
+import { getCurrentUser } from './auth-client';
 
-export default function Home() {
+export const dynamic = 'force-dynamic';
+
+export default async function Home() {
+  const user = await getCurrentUser();
   return (
     <div className="site">
       <header><a className="brand" href="/" aria-label="Booked and Busy home"><span className="logo"><img src="/calendar-assistant-logo.png" alt="" width="157" height="157" /></span>Booked and Busy<span className="brand-dot">.</span></a><span className="header-note">Screenshot it. Schedule it.</span></header>
@@ -14,8 +18,8 @@ export default function Home() {
           </div>
           <div className="plan-cta">
             <p><strong>$2.99</strong> / month</p>
-            <Link className="primary-button" href="/signup">Sign up</Link>
-            <Link href="/signup?mode=login">Log in</Link>
+            <Link className="primary-button" href={user ? '/upload' : '/signup'}>{user ? 'Upload screenshots' : 'Sign up'}</Link>
+            <Link href={user ? '/account' : '/signup?mode=login'}>{user ? 'Your account' : 'Log in'}</Link>
           </div>
         </section>
         <div className="hero-artwork">

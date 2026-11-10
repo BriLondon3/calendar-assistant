@@ -20,6 +20,7 @@ export default async function AccountPage({ searchParams }) {
         <Link href="/">← Booked and Busy</Link>
         <h1 id="account-heading">Your account</h1>
         <p>Signed in as <strong>{user.email}</strong>.</p>
+        <Link className="primary-button" href="/upload">Upload event screenshots</Link>
         <p>Monthly plan · <strong>$2.99/month</strong></p>
         <p>Subscriptions are coming soon. You haven’t been charged.</p>
         <section className="calendar-section" aria-labelledby="calendar-heading">
