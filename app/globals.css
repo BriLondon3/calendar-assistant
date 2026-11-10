@@ -60,6 +60,18 @@ h1 em{font-style:normal;color:var(--blue)}
 .auth-form input { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid #8294a8; border-radius: 8px; font: inherit; }
 .auth-card .auth-error { margin: 0; color: #9d281a; }
 .text-button { border: 0; background: transparent; color: #125bb4; font: inherit; text-decoration: underline; cursor: pointer; }
+
+.account-card { width: min(100%, 720px); }
+.calendar-section { margin: 28px 0; padding: 24px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.calendar-section h2 { font-size: 24px; letter-spacing: -.5px; margin: 0; }
+.calendar-day { margin-top: 24px; }
+.calendar-day label { display: block; font-weight: 600; margin-bottom: 8px; }
+.calendar-day input { min-height: 44px; max-width: 100%; padding: 10px 12px; border: 1px solid #8294a8; border-radius: 8px; background: white; color: var(--ink); font: inherit; }
+.calendar-day .calendar-timezone { font-size: 13px; }
+.calendar-events { list-style: none; padding: 0; margin: 20px 0 0; display: grid; gap: 12px; }
+.calendar-events li { display: grid; gap: 5px; padding: 16px; border-left: 3px solid var(--blue); border-radius: 8px; background: #edf4ff; overflow-wrap: anywhere; }
+.calendar-events li span { color: var(--muted); font-size: 14px; }
+.calendar-events li .calendar-event-time { color: #125bb4; font-weight: 600; }
 .hero-artwork{width:100%;min-width:0}
 .hero-artwork img{display:block;width:100%;height:auto;border-radius:16px}
 .how-it-works{grid-column:1/-1;padding-top:44px;border-top:1px solid var(--line)}

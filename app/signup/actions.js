@@ -4,7 +4,7 @@ import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { authConfigured, createWritableAuthClient } from '../auth-client';
 
-export async function continueWithGoogle() {
+async function startGoogleSignIn(calendarAccess = false) {
   const origin = (await headers()).get('origin');
   const localOrigins = ['http://127.0.0.1:3000', 'http://localhost:3000'];
   const configuredOrigin = process.env.SITE_URL || (process.env.VERCEL_PROJECT_PRODUCTION_URL
@@ -20,11 +20,29 @@ export async function continueWithGoogle() {
   const client = await createWritableAuthClient();
   const { data, error } = await client.auth.signInWithOAuth({
     provider: 'google',
-    options: { redirectTo: new URL('/auth/callback', siteOrigin).href },
+    options: {
+      redirectTo: new URL('/auth/callback', siteOrigin).href,
+      ...(calendarAccess && {
+        scopes: 'https://www.googleapis.com/auth/calendar.events.owned',
+        queryParams: { prompt: 'consent', include_granted_scopes: 'true' },
+      }),
+    },
   });
 
   if (error || !data.url) redirect('/signup?error=google');
   redirect(data.url);
+}
+
+export async function continueWithGoogle() {
+  await startGoogleSignIn();
+}
+
+export async function connectGoogleCalendar() {
+  if (!authConfigured()) redirect('/signup');
+  const client = await createWritableAuthClient();
+  const { data: { user } } = await client.auth.getUser();
+  if (!user) redirect('/signup?mode=login');
+  await startGoogleSignIn(true);
 }
 
 export async function logout() {

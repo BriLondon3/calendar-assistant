@@ -19,4 +19,4 @@ export async function proxy(request) {
   return response;
 }
 
-export const config = { matcher: '/account' };
+export const config = { matcher: ['/account', '/api/calendar'] };

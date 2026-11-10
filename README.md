@@ -28,3 +28,11 @@ To deploy later, import this repository into Vercel and use its Next.js defaults
 4. Test **Continue with Google** on the local site and then on the production domain. If your Google OAuth app is in Testing, use an account permitted by that app.
 
 The $2.99/month price is displayed on the site. Stripe checkout, subscription status, and billing are pending integration.
+
+## Google Calendar connection
+
+Enable the Google Calendar API in the Google Cloud project used for sign-in. While the OAuth app is in Testing, add your Google account under Audience → Test users. Under Data Access, configure `https://www.googleapis.com/auth/calendar.events.owned` for viewing and eventually adding events on owned calendars.
+
+From `/account`, choose **Connect Google Calendar** and grant Calendar access. The account page shows the selected day from the signed-in Google account’s primary calendar, using the browser’s time zone. Choose the same Google account when reconnecting.
+
+The initial connection uses the Google access token held in the server-only session cookie. When the token expires or is lost during a session refresh, users reconnect using the button. Persistent Google token refresh and the screenshot review/add/reject workflow are still pending. Calendar data is fetched on demand without shared caching.
