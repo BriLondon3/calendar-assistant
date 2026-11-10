@@ -27,7 +27,7 @@ export async function GET(request) {
         try {
           await saveCalendarConnection(client, data.session);
         } catch {
-          redirect('/calendar?calendar=save-failed');
+          redirect('/account?calendar=save-failed');
         }
       }
       redirect(destination === 'calendar' ? '/calendar' : '/upload');
