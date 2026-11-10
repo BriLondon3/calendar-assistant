@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers';
 import { authConfigured, createAuthClient } from '../../auth-client';
 import { getCalendarAccess } from '../../calendar-connection';
+import { resolveEventColor } from '../../calendar/event-colors';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,17 +34,20 @@ export async function GET(request) {
     singleEvents: 'true',
     orderBy: 'startTime',
     maxResults: '2500',
-    fields: 'nextPageToken,summary,items(id,summary,start,end,location,status,transparency,colorId)',
+    fields: 'nextPageToken,summary,items(id,summary,start,end,location,status,transparency,colorId,eventLabelId)',
   });
 
   try {
     const headers = { Authorization: `Bearer ${access.token}` };
-    const [colorsResponse, calendarResponse] = await Promise.all([
+    const [colorsResponse, calendarResponse, labelsResponse] = await Promise.all([
       fetch('https://www.googleapis.com/calendar/v3/colors', { headers, cache: 'no-store', signal: AbortSignal.timeout(15000) }),
       fetch('https://www.googleapis.com/calendar/v3/users/me/calendarList/primary?fields=backgroundColor,foregroundColor', { headers, cache: 'no-store', signal: AbortSignal.timeout(15000) }),
+      fetch('https://www.googleapis.com/calendar/v3/calendars/primary?fields=labelProperties', { headers, cache: 'no-store', signal: AbortSignal.timeout(15000) }),
     ]);
     const colors = colorsResponse.ok ? await colorsResponse.json() : {};
     const calendarColor = calendarResponse.ok ? await calendarResponse.json() : { backgroundColor: '#039be5', foregroundColor: '#ffffff' };
+    const labelData = labelsResponse.ok ? await labelsResponse.json() : {};
+    const labels = labelData.labelProperties?.eventLabels || [];
     const events = [];
     let pageToken;
     let calendarName;
@@ -64,14 +68,12 @@ export async function GET(request) {
     } while (pageToken);
 
     const coloredEvents = events.map(event => {
-      const color = colors.event?.[event.colorId];
       return {
         ...event,
-        backgroundColor: color?.background || calendarColor.backgroundColor,
-        foregroundColor: color?.foreground || calendarColor.foregroundColor,
+        ...resolveEventColor(event, labels, colors, calendarColor),
       };
     });
-    return json({ events: coloredEvents, calendarName, calendarColorAvailable: calendarResponse.ok });
+    return json({ events: coloredEvents, calendarName, calendarColorAvailable: calendarResponse.ok, customColorsAvailable: labelsResponse.ok });
   } catch {
     return json({ error: 'Couldn’t load Google Calendar. Try again shortly.' }, 502);
   }

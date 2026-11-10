@@ -31,7 +31,7 @@ async function startGoogleSignIn(calendarAccess = false) {
     options: {
       redirectTo: new URL('/auth/callback', siteOrigin).href,
       ...(calendarAccess && {
-        scopes: 'https://www.googleapis.com/auth/calendar.events.owned https://www.googleapis.com/auth/calendar.calendarlist.readonly',
+        scopes: 'https://www.googleapis.com/auth/calendar.events.owned https://www.googleapis.com/auth/calendar.calendarlist.readonly https://www.googleapis.com/auth/calendar.calendars.readonly',
         queryParams: { prompt: 'consent', access_type: 'offline', include_granted_scopes: 'true' },
       }),
     },

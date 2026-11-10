@@ -74,6 +74,7 @@ export default function CalendarDay() {
         {result?.events?.length === 0 && <p>No events on this day.</p>}
         {result?.events && <DayTimeline events={result.events} date={date} timeZone={timeZone} timelineRef={timeline} />}
         {result?.calendarColorAvailable === false && result?.events && <p className="calendar-timezone">Event colors are shown where available. <Link href="/account">Reconnect Calendar</Link> to also use your calendar’s default color.</p>}
+        {result?.customColorsAvailable === false && result?.events && <p className="calendar-timezone"><Link href="/account">Reconnect Calendar</Link> to use your custom Google event colors.</p>}
       </div>
     </div>
   );
