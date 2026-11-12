@@ -14,7 +14,7 @@ function eventTime(event, timeZone) {
   return `${format.format(new Date(event.start.dateTime))} – ${format.format(new Date(event.end.dateTime))}`;
 }
 
-export default function CalendarDay({ initialDate }) {
+export default function CalendarDay({ initialDate, fixedDate = false }) {
   const [date, setDate] = useState('');
   const [timeZone, setTimeZone] = useState('');
   const [result, setResult] = useState(null);
@@ -65,8 +65,10 @@ export default function CalendarDay({ initialDate }) {
 
   return (
     <div className="calendar-day" aria-busy={loading}>
-      <label htmlFor="calendar-date">Choose a day</label>
-      <input id="calendar-date" type="date" value={date} onChange={event => setDate(event.target.value)} />
+      {!fixedDate && <>
+        <label htmlFor="calendar-date">Choose a day</label>
+        <input id="calendar-date" type="date" value={date} onChange={event => setDate(event.target.value)} />
+      </>}
       <p className="calendar-timezone">Times shown in {timeZone || 'your local time zone'}. Primary calendar.</p>
       <div aria-live="polite">
         {loading && <p>Loading your calendar…</p>}

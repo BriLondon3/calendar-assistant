@@ -1,12 +1,50 @@
 import { cookies } from 'next/headers';
-import { authConfigured, createAuthClient } from '../../auth-client';
+import { authConfigured, createAuthClient, createWritableAuthClient } from '../../auth-client';
 import { getCalendarAccess } from '../../calendar-connection';
 import { resolveEventColor } from '../../calendar/event-colors';
+import { prepareCalendarEvent } from '../../calendar/event-insert';
 
 export const dynamic = 'force-dynamic';
 
 function json(body, status = 200) {
   return Response.json(body, { status, headers: { 'Cache-Control': 'private, no-store' } });
+}
+
+export async function POST(request) {
+  if (!authConfigured()) return json({ error: 'Calendar access isn’t available yet.' }, 503);
+  const origin = request.headers.get('origin');
+  if (origin && origin !== new URL(request.url).origin && origin !== process.env.SITE_URL) {
+    return json({ error: 'Open Booked and Busy to add this event.' }, 403);
+  }
+  const client = await createWritableAuthClient();
+  const { data: { user } } = await client.auth.getUser();
+  if (!user) return json({ error: 'Please log in again.' }, 401);
+  const draft = await request.json().catch(() => null);
+  const { event, error } = prepareCalendarEvent(draft);
+  if (error) return json({ error }, 400);
+
+  try {
+    const access = await getCalendarAccess(client, user.id);
+    if (access.error) return json({ error: access.error }, 503);
+    if (!access.token) return json({ error: 'Connect Google Calendar before adding this event.', reconnect: true }, 403);
+    const endpoint = 'https://www.googleapis.com/calendar/v3/calendars/primary/events';
+    const headers = { Authorization: `Bearer ${access.token}`, 'Content-Type': 'application/json' };
+    const response = await fetch(`${endpoint}?sendUpdates=none`, {
+      method: 'POST', headers, body: JSON.stringify(event), signal: AbortSignal.timeout(15000), cache: 'no-store',
+    });
+    if (response.ok) return json({ added: true });
+    if (response.status === 409) {
+      const existing = await fetch(`${endpoint}/${event.id}`, { headers, signal: AbortSignal.timeout(10000), cache: 'no-store' });
+      if (existing.ok && (await existing.json()).status !== 'cancelled') return json({ added: true });
+    }
+    if (response.status === 401 || response.status === 403) {
+      return json({ error: 'Reconnect Google Calendar and allow access to add events.', reconnect: true }, 403);
+    }
+    if (response.status === 400) return json({ error: 'Google Calendar rejected the event details. Check the dates and times, then try again.' }, 400);
+    return json({ error: 'Couldn’t confirm the event was added. Try again.' }, 502);
+  } catch {
+    return json({ error: 'Couldn’t confirm the event was added. Try again.' }, 502);
+  }
 }
 
 export async function GET(request) {

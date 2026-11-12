@@ -116,6 +116,7 @@ export default function ScreenshotPicker() {
 
   return (
     <div>
+      {events.length > 0 && <EventReview events={events} onChange={(id, fields) => setEvents(current => current.map(event => event.id === id ? { ...event, ...fields } : event))} onReject={id => setEvents(current => current.filter(event => event.id !== id))} />}
       <div className="upload-dropzone" onDragOver={event => event.preventDefault()} onDrop={event => {
         event.preventDefault();
         addFiles(Array.from(event.dataTransfer.files));
@@ -145,7 +146,6 @@ export default function ScreenshotPicker() {
           </li>
         ))}
       </ul>
-      {events.length > 0 && <EventReview events={events} onChange={(id, field, value) => setEvents(current => current.map(event => event.id === id ? { ...event, [field]: value } : event))} onReject={id => setEvents(current => current.filter(event => event.id !== id))} />}
     </div>
   );
 }
