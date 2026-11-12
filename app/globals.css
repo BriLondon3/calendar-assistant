@@ -166,6 +166,11 @@ footer strong{font-weight:600;color:var(--ink)}.footer-star{color:#ff7b24;font-s
 .review-list { display: grid; gap: 12px; list-style: none; padding: 0; margin: 0; min-width: 0; }
 .review-card { display: grid; gap: 8px; padding: 18px; border: 1px solid var(--line); border-radius: 12px; background: white; }
 .review-card[data-selected="true"] { border-color: #1265ca; box-shadow: 0 0 0 1px #1265ca; }
+.review-card-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.review-edit-button { display: grid; place-items: center; flex: 0 0 36px; height: 36px; border: 1px solid #c4d9f2; border-radius: 9px; background: #edf5ff; color: #125bb4; font: inherit; font-size: 23px; line-height: 1; cursor: pointer; }
+.review-edit-button:hover { background: #dfedff; }
+.review-event-meta { display: grid; gap: 4px; padding: 12px; border-radius: 8px; background: #f1f6fd; }
+.review-event-meta .review-date:first-child { font-weight: 700; color: var(--ink); }
 .review-event-title { padding: 0; border: 0; background: transparent; color: #125bb4; text-align: left; font: inherit; font-weight: 700; font-size: 18px; cursor: pointer; overflow-wrap: anywhere; }
 .review-date, .review-description, .review-added { margin: 0; line-height: 1.55; overflow-wrap: anywhere; }
 .review-date { color: var(--muted); font-size: 14px; }
@@ -181,6 +186,10 @@ footer strong{font-weight:600;color:var(--ink)}.footer-star{color:#ff7b24;font-s
 .review-notes summary { cursor: pointer; }
 .review-notes ul { margin: 8px 0 0; padding-left: 18px; }
 .review-actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 4px; }
+.review-skip-button { border: 1px solid #f0c8ae; border-radius: 9px; padding: 10px 14px; min-height: 44px; background: #fff0e3; color: #873900; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+.review-skip-button:hover { background: #ffe1ca; }
+.review-skip-button:disabled, .review-edit-button:disabled { opacity: .65; cursor: wait; }
+.timed-event.proposed-event, .all-day-row button.proposed-event { border: 2px dashed #1265ca; background: #edf5ff; color: #114f9b; }
 .review-calendar { min-width: 0; position: sticky; top: 16px; }
 .review-calendar h3 { margin: 0; }
 @media(max-width:760px) { .review-layout { grid-template-columns: 1fr; } .review-calendar { position: static; } }

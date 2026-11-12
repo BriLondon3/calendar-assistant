@@ -2,7 +2,7 @@ import { cookies } from 'next/headers';
 import { authConfigured, createAuthClient, createWritableAuthClient } from '../../auth-client';
 import { getCalendarAccess } from '../../calendar-connection';
 import { resolveEventColor } from '../../calendar/event-colors';
-import { prepareCalendarEvent } from '../../calendar/event-insert';
+import { isBookedAndBusyEvent, prepareCalendarEvent } from '../../calendar/event-insert';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,10 +32,10 @@ export async function POST(request) {
     const response = await fetch(`${endpoint}?sendUpdates=none`, {
       method: 'POST', headers, body: JSON.stringify(event), signal: AbortSignal.timeout(15000), cache: 'no-store',
     });
-    if (response.ok) return json({ added: true });
+    if (response.ok) return json({ added: true, eventId: event.id });
     if (response.status === 409) {
       const existing = await fetch(`${endpoint}/${event.id}`, { headers, signal: AbortSignal.timeout(10000), cache: 'no-store' });
-      if (existing.ok && (await existing.json()).status !== 'cancelled') return json({ added: true });
+      if (existing.ok && (await existing.json()).status !== 'cancelled') return json({ added: true, eventId: event.id });
     }
     if (response.status === 401 || response.status === 403) {
       return json({ error: 'Reconnect Google Calendar and allow access to add events.', reconnect: true }, 403);
@@ -44,6 +44,36 @@ export async function POST(request) {
     return json({ error: 'Couldn’t confirm the event was added. Try again.' }, 502);
   } catch {
     return json({ error: 'Couldn’t confirm the event was added. Try again.' }, 502);
+  }
+}
+
+export async function DELETE(request) {
+  if (!authConfigured()) return json({ error: 'Calendar access isn’t available yet.' }, 503);
+  const origin = request.headers.get('origin');
+  if (origin && origin !== new URL(request.url).origin && origin !== process.env.SITE_URL) {
+    return json({ error: 'Open Booked and Busy to remove this event.' }, 403);
+  }
+  const client = await createWritableAuthClient();
+  const { data: { user } } = await client.auth.getUser();
+  if (!user) return json({ error: 'Please log in again.' }, 401);
+  const { eventId } = (await request.json().catch(() => null)) || {};
+  if (!isBookedAndBusyEvent(eventId)) return json({ error: 'Choose an event added through Booked and Busy.' }, 400);
+
+  try {
+    const access = await getCalendarAccess(client, user.id);
+    if (access.error) return json({ error: access.error }, 503);
+    if (!access.token) return json({ error: 'Reconnect Google Calendar before removing this event.', reconnect: true }, 403);
+    const response = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${eventId}?sendUpdates=none`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${access.token}` },
+      signal: AbortSignal.timeout(15000),
+      cache: 'no-store',
+    });
+    if (response.ok || response.status === 404 || response.status === 410) return json({ removed: true });
+    if (response.status === 401 || response.status === 403) return json({ error: 'Reconnect Google Calendar and allow access to remove events.', reconnect: true }, 403);
+    return json({ error: 'Couldn’t confirm the event was removed. Try again.' }, 502);
+  } catch {
+    return json({ error: 'Couldn’t confirm the event was removed. Try again.' }, 502);
   }
 }
 

@@ -5,6 +5,10 @@ function validDate(value) {
 
 const validTime = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
 
+export function isBookedAndBusyEvent(id) {
+  return typeof id === 'string' && /^bb[0-9a-f]{32}$/.test(id);
+}
+
 export function prepareCalendarEvent(draft) {
   if (!draft || typeof draft.id !== 'string' || !/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(draft.id)) {
     return { error: 'This event is missing its identifier. Extract it again.' };

@@ -58,12 +58,12 @@ export default function EventReview({ events, onChange, onReject }) {
     heading.current?.focus();
   }, []);
 
-  async function addEvent(event) {
+  async function updateCalendar(event, remove = false) {
     if (saving.current) return;
     setSelectedId(event.id);
     setFeedback(null);
     const draft = { ...event, timeZone };
-    const { error } = prepareCalendarEvent(draft);
+    const { error } = remove ? {} : prepareCalendarEvent(draft);
     if (error) {
       setFeedback({ id: event.id, message: error });
       setEditingId(event.id);
@@ -73,24 +73,32 @@ export default function EventReview({ events, onChange, onReject }) {
     setAddingId(event.id);
     try {
       const response = await fetch('/api/calendar', {
-        method: 'POST',
+        method: remove ? 'DELETE' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(draft),
+        body: JSON.stringify(remove ? { eventId: event.calendarEventId } : draft),
       });
       const result = await response.json();
-      if (!response.ok || !result.added) {
-        setFeedback({ id: event.id, message: result.error || 'Couldn’t confirm the event was added. Try again.', reconnect: result.reconnect });
+      if (!response.ok || !(remove ? result.removed : result.added)) {
+        setFeedback({ id: event.id, message: result.error || 'Couldn’t update Google Calendar. Try again.', reconnect: result.reconnect });
         return;
       }
-      onChange(event.id, { added: true });
+      if (remove) {
+        const id = crypto.randomUUID();
+        onChange(event.id, { id, added: false, calendarEventId: null });
+        setSelectedId(id);
+      } else {
+        onChange(event.id, { added: true, calendarEventId: result.eventId });
+      }
       setCalendarVersion(version => version + 1);
     } catch {
-      setFeedback({ id: event.id, message: 'Couldn’t confirm the event was added. Try again.' });
+      setFeedback({ id: event.id, message: 'Couldn’t update Google Calendar. Try again.' });
     } finally {
       saving.current = false;
       setAddingId(null);
     }
   }
+
+  const preview = selected.added ? null : prepareCalendarEvent({ ...selected, timeZone }).event;
 
   return (
     <section className="event-review" aria-labelledby="review-heading">
@@ -100,19 +108,23 @@ export default function EventReview({ events, onChange, onReject }) {
           {events.map(event => (
             <li key={event.id}>
               <article className="review-card" data-selected={selected.id === event.id}>
-                <button className="review-event-title" type="button" aria-pressed={selected.id === event.id} onClick={() => setSelectedId(event.id)}>
-                  {event.title || 'Untitled event'}
-                </button>
-                <p className="review-date">
+                <div className="review-card-heading">
+                  <button className="review-event-title" type="button" aria-pressed={selected.id === event.id} onClick={() => setSelectedId(event.id)}>
+                    {event.title || 'Untitled event'}
+                  </button>
+                  {!event.added && <button className="review-edit-button" type="button" aria-label={`Edit ${event.title || 'event'}`} title="Edit event" disabled={Boolean(addingId)} onClick={() => { setSelectedId(event.id); setEditingId(event.id); setFeedback(null); }}><span aria-hidden="true">✎</span></button>}
+                </div>
+                <div className="review-event-meta"><p className="review-date">
                   {event.date ? formatDate(event.date) : 'Date to confirm'}
                   {event.endDate && event.endDate !== event.date && ` – ${formatDate(event.endDate)}`}
                 </p>
                 <p className="review-date">{event.allDay ? 'All day' : event.startTime ? `${formatTime(event.startTime)}${event.endTime ? ` – ${formatTime(event.endTime)}` : ' · End time to confirm'}` : 'Time to confirm'}</p>
                 {event.location && <p className="review-date">{event.location}</p>}
+                </div>
                 {event.description && <p className="review-description">{event.description}</p>}
                 {event.notes.length > 0 && !event.added && <details className="review-notes"><summary>Extraction notes</summary><ul>{event.notes.map((note, index) => <li key={index}>{note}</li>)}</ul></details>}
                 {feedback?.id === event.id && <p role="alert" className="review-warning">{feedback.message} {feedback.reconnect && <Link href="/account">Manage Calendar connection</Link>}</p>}
-                {event.added ? <p className="review-added" role="status">Added to Google Calendar</p> : editingId === event.id ? (
+                {event.added ? <div className="review-actions"><p className="review-added" role="status">Added to Google Calendar</p><button className="review-skip-button" type="button" disabled={Boolean(addingId)} onClick={() => updateCalendar(event, true)}>{addingId === event.id ? 'Removing…' : 'Remove from calendar'}</button></div> : editingId === event.id ? (
                   <EventEditor key={event.id} event={event} onCancel={() => setEditingId(null)} onSave={draft => {
                     onChange(event.id, draft);
                     setFeedback(null);
@@ -120,9 +132,8 @@ export default function EventReview({ events, onChange, onReject }) {
                   }} />
                 ) : (
                   <div className="review-actions">
-                    <button className="primary-button" type="button" disabled={Boolean(addingId)} onClick={() => addEvent(event)}>{addingId === event.id ? 'Adding…' : 'Add to calendar'}</button>
-                    <button className="text-button" type="button" disabled={Boolean(addingId)} onClick={() => { setSelectedId(event.id); setEditingId(event.id); setFeedback(null); }}>Edit</button>
-                    <button className="text-button" type="button" disabled={Boolean(addingId)} onClick={() => onReject(event.id)}>Skip this</button>
+                    <button className="primary-button" type="button" disabled={Boolean(addingId)} onClick={() => updateCalendar(event)}>{addingId === event.id ? 'Adding…' : 'Add to calendar'}</button>
+                    <button className="review-skip-button" type="button" disabled={Boolean(addingId)} onClick={() => onReject(event.id)}>Skip this</button>
                   </div>
                 )}
               </article>
@@ -132,7 +143,7 @@ export default function EventReview({ events, onChange, onReject }) {
         <aside className="review-calendar" aria-label="Calendar for the selected event">
           <h3>Your calendar</h3>
           {selected.date
-            ? <CalendarDay key={`${selected.date}:${calendarVersion}`} initialDate={selected.date} fixedDate />
+            ? <CalendarDay key={`${selected.date}:${calendarVersion}`} initialDate={selected.date} fixedDate preview={preview} />
             : <p>Add a date to the selected event to see that day’s calendar.</p>}
         </aside>
       </div>
