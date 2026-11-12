@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import CalendarDay from '../calendar/calendar-day';
 import { prepareCalendarEvent } from '../calendar/event-insert';
+import { groupEventsByDay } from './review-events';
 
 function formatDate(date) {
   return new Date(`${date}T12:00:00`).toLocaleDateString(undefined, {
@@ -102,44 +103,51 @@ export default function EventReview({ events, onChange, onReject }) {
 
   return (
     <section className="event-review" aria-labelledby="review-heading">
-      <h2 ref={heading} id="review-heading" tabIndex={-1}>Review your events</h2>
+      <h2 ref={heading} id="review-heading" tabIndex={-1}>Review events</h2>
       <div className="review-layout">
-        <ul className="review-list" aria-label="Extracted events">
-          {events.map(event => (
-            <li key={event.id}>
-              <article className="review-card" data-selected={selected.id === event.id}>
-                <div className="review-card-heading">
-                  <button className="review-event-title" type="button" aria-pressed={selected.id === event.id} onClick={() => setSelectedId(event.id)}>
-                    {event.title || 'Untitled event'}
-                  </button>
-                  {!event.added && <button className="review-edit-button" type="button" aria-label={`Edit ${event.title || 'event'}`} title="Edit event" disabled={Boolean(addingId)} onClick={() => { setSelectedId(event.id); setEditingId(event.id); setFeedback(null); }}><span aria-hidden="true">✎</span></button>}
-                </div>
-                <div className="review-event-meta"><p className="review-date">
-                  {event.date ? formatDate(event.date) : 'Date to confirm'}
-                  {event.endDate && event.endDate !== event.date && ` – ${formatDate(event.endDate)}`}
-                </p>
-                <p className="review-date">{event.allDay ? 'All day' : event.startTime ? `${formatTime(event.startTime)}${event.endTime ? ` – ${formatTime(event.endTime)}` : ' · End time to confirm'}` : 'Time to confirm'}</p>
-                {event.location && <p className="review-date">{event.location}</p>}
-                </div>
-                {event.description && <p className="review-description">{event.description}</p>}
-                {event.notes.length > 0 && !event.added && <details className="review-notes"><summary>Extraction notes</summary><ul>{event.notes.map((note, index) => <li key={index}>{note}</li>)}</ul></details>}
-                {feedback?.id === event.id && <p role="alert" className="review-warning">{feedback.message} {feedback.reconnect && <Link href="/account">Manage Calendar connection</Link>}</p>}
-                {event.added ? <div className="review-actions"><p className="review-added" role="status">Added to Google Calendar</p><button className="review-skip-button" type="button" disabled={Boolean(addingId)} onClick={() => updateCalendar(event, true)}>{addingId === event.id ? 'Removing…' : 'Remove from calendar'}</button></div> : editingId === event.id ? (
-                  <EventEditor key={event.id} event={event} onCancel={() => setEditingId(null)} onSave={draft => {
-                    onChange(event.id, draft);
-                    setFeedback(null);
-                    setEditingId(null);
-                  }} />
-                ) : (
-                  <div className="review-actions">
-                    <button className="primary-button" type="button" disabled={Boolean(addingId)} onClick={() => updateCalendar(event)}>{addingId === event.id ? 'Adding…' : 'Add to calendar'}</button>
-                    <button className="review-skip-button" type="button" disabled={Boolean(addingId)} onClick={() => onReject(event.id)}>Skip this</button>
-                  </div>
-                )}
-              </article>
-            </li>
+        <div className="review-list" aria-label="Extracted events">
+          {groupEventsByDay(events).map(([date, dayEvents]) => (
+            <section key={date} className="review-day-group">
+              <h3 className="review-day-divider">{date ? new Date(`${date}T12:00:00`).toLocaleDateString(undefined, { weekday: 'long' }) : 'Date to confirm'}</h3>
+              <ul className="review-list">
+                {dayEvents.map(event => (
+                  <li key={event.id}>
+                    <article className="review-card" data-selected={selected.id === event.id}>
+                      <div className="review-card-heading">
+                        <button className="review-event-title" type="button" aria-pressed={selected.id === event.id} onClick={() => setSelectedId(event.id)}>
+                          {event.title || 'Untitled event'}
+                        </button>
+                        {!event.added && <button className="review-edit-button" type="button" aria-label={`Edit ${event.title || 'event'}`} title="Edit event" disabled={Boolean(addingId)} onClick={() => { setSelectedId(event.id); setEditingId(event.id); setFeedback(null); }}><span aria-hidden="true">✎</span></button>}
+                      </div>
+                      <div className="review-event-meta"><p className="review-date">
+                        {event.date ? formatDate(event.date) : 'Date to confirm'}
+                        {event.endDate && event.endDate !== event.date && ` – ${formatDate(event.endDate)}`}
+                      </p>
+                      <p className="review-date">{event.allDay ? 'All day' : event.startTime ? `${formatTime(event.startTime)}${event.endTime ? ` – ${formatTime(event.endTime)}` : ' · End time to confirm'}` : 'Time to confirm'}</p>
+                      {event.location && <p className="review-date">{event.location}</p>}
+                      </div>
+                      {event.description && <p className="review-description">{event.description}</p>}
+                      {event.notes.length > 0 && !event.added && <details className="review-notes"><summary>Extraction notes</summary><ul>{event.notes.map((note, index) => <li key={index}>{note}</li>)}</ul></details>}
+                      {feedback?.id === event.id && <p role="alert" className="review-warning">{feedback.message} {feedback.reconnect && <Link href="/account">Manage Calendar connection</Link>}</p>}
+                      {event.added ? <div className="review-actions"><p className="review-added" role="status">Added to Google Calendar</p><button className="review-skip-button" type="button" disabled={Boolean(addingId)} onClick={() => updateCalendar(event, true)}>{addingId === event.id ? 'Removing…' : 'Remove from calendar'}</button></div> : editingId === event.id ? (
+                        <EventEditor key={event.id} event={event} onCancel={() => setEditingId(null)} onSave={draft => {
+                          onChange(event.id, draft);
+                          setFeedback(null);
+                          setEditingId(null);
+                        }} />
+                      ) : (
+                        <div className="review-actions">
+                          <button className="primary-button" type="button" disabled={Boolean(addingId)} onClick={() => updateCalendar(event)}>{addingId === event.id ? 'Adding…' : 'Add to calendar'}</button>
+                          <button className="review-skip-button" type="button" disabled={Boolean(addingId)} onClick={() => onReject(event.id)}>Skip this</button>
+                        </div>
+                      )}
+                    </article>
+                  </li>
+                ))}
+              </ul>
+            </section>
           ))}
-        </ul>
+        </div>
         <aside className="review-calendar" aria-label="Calendar for the selected event">
           <h3>Your calendar</h3>
           {selected.date

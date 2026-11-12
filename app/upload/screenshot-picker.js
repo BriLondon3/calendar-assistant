@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import EventReview from './event-review';
+import { eventFingerprint, mergeExtractedEvents } from './review-events';
 
 const MAX_FILES = 10;
 const MAX_BYTES = 3 * 1024 * 1024;
@@ -72,7 +73,9 @@ export default function ScreenshotPicker() {
     URL.revokeObjectURL(image.url);
     urls.current.delete(image.url);
     setScreenshots(current => current.filter(item => item.id !== id));
-    setEvents(current => current.filter(item => item.screenshotId !== id));
+    setEvents(current => current.map(event => ({
+      ...event, screenshotIds: event.screenshotIds.filter(screenshotId => screenshotId !== id),
+    })).filter(event => event.screenshotIds.length > 0));
   }
 
   async function extractEvents() {
@@ -98,8 +101,10 @@ export default function ScreenshotPicker() {
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || 'Couldn’t process this screenshot.');
         if (!mounted.current) break;
-        const suggestions = data.events.map(event => ({ ...event, id: crypto.randomUUID(), screenshotId: image.id, source: image.name }));
-        setEvents(current => [...current, ...suggestions]);
+        const suggestions = data.events.map(event => ({
+          ...event, id: crypto.randomUUID(), fingerprint: eventFingerprint(event), screenshotIds: [image.id],
+        }));
+        setEvents(current => mergeExtractedEvents(current, suggestions));
         setScreenshots(current => current.map(item => item.id === image.id ? { ...item, status: 'done', count: suggestions.length } : item));
       } catch (error) {
         if (controller.signal.aborted) break;
@@ -136,6 +141,7 @@ export default function ScreenshotPicker() {
       {error && <p className="auth-error" role="alert">{error}</p>}
       <p className="upload-note">Extract events sends your selected screenshots to Google Gemini to read the event details. Screenshots and edits stay in this tab until you leave or refresh.</p>
       {screenshots.some(image => image.status !== 'done') && <button className="primary-button" type="button" disabled={busy} onClick={extractEvents}>{busy ? 'Working…' : 'Extract events'}</button>}
+      {!screenshots.some(image => image.status !== 'done') && events.length > 0 && <a className="primary-button" href="#review-heading">Review events</a>}
       <p role="status">{progress}</p>
       <p aria-live="polite">{screenshots.length > 0 && `${screenshots.length} screenshot${screenshots.length === 1 ? '' : 's'} selected`}</p>
       <ul className="screenshot-grid">
