@@ -15,20 +15,23 @@ function eventTime(event, timeZone) {
   return `${format.format(new Date(event.start.dateTime))} – ${format.format(new Date(event.end.dateTime))}`;
 }
 
-export default function CalendarDay({ initialDate, fixedDate = false, preview }) {
+export default function CalendarDay({ initialDate, fixedDate = false, previews = [], focusedPreview }) {
   const [date, setDate] = useState('');
   const [timeZone, setTimeZone] = useState('');
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const timeline = useRef(null);
-  const previewStart = preview?.start?.dateTime;
+  const previewStart = previews.find(event => event.id === focusedPreview)?.start.dateTime
+    || previews.find(event => event.start.dateTime)?.start.dateTime;
 
   useEffect(() => {
-    if (result?.events && timeline.current) {
-      const timed = layoutDayEvents(result.events, date);
+    if (result && timeline.current) {
+      const timed = layoutDayEvents(result.events || [], date);
       const firstMinute = timed[0]?.startMinute ?? 480;
       const proposedStart = previewStart ? new Date(previewStart) : null;
-      const minute = proposedStart ? proposedStart.getHours() * 60 + proposedStart.getMinutes() : Math.min(480, firstMinute);
+      const minute = proposedStart
+        ? (previewStart.slice(0, 10) < date ? 0 : proposedStart.getHours() * 60 + proposedStart.getMinutes())
+        : Math.min(480, firstMinute);
       timeline.current.scrollTop = Math.max(0, (minute - 30) / 60 * 64);
     }
   }, [result, date, previewStart]);
@@ -77,8 +80,8 @@ export default function CalendarDay({ initialDate, fixedDate = false, preview })
       <div aria-live="polite">
         {loading && <p>Loading your calendar…</p>}
         {result?.error && <p role="status">{result.error}</p>}
-        {result?.events?.length === 0 && !preview && <p>No events on this day.</p>}
-        {result?.events && <DayTimeline events={result.events} preview={preview} date={date} timeZone={timeZone} timelineRef={timeline}
+        {result?.events?.length === 0 && previews.length === 0 && <p>No events on this day.</p>}
+        {result && (result.events || previews.length > 0) && <DayTimeline events={result.events || []} previews={previews} date={date} timeZone={timeZone} timelineRef={timeline}
           onRemove={fixedDate ? undefined : id => setResult(current => current?.events ? { ...current, events: current.events.filter(event => event.id !== id) } : current)} />}
         {result?.calendarColorAvailable === false && result?.events && <p className="calendar-timezone">Event colors are shown where available. <Link href="/account">Reconnect Calendar</Link> to also use your calendar’s default color.</p>}
         {result?.customColorsAvailable === false && result?.events && <p className="calendar-timezone"><Link href="/account">Reconnect Calendar</Link> to use your custom Google event colors.</p>}
@@ -87,15 +90,17 @@ export default function CalendarDay({ initialDate, fixedDate = false, preview })
   );
 }
 
-function DayTimeline({ events, preview, date, timeZone, timelineRef, onRemove }) {
-  const entries = preview ? [...events, { ...preview, id: 'proposed-event', proposed: true }] : events;
+function DayTimeline({ events, previews, date, timeZone, timelineRef, onRemove }) {
+  const savedIds = new Set(events.map(event => event.id));
+  const entries = [...events, ...previews.filter(event => !savedIds.has(event.id))];
   const timed = layoutDayEvents(entries, date);
   const allDay = entries.filter(event => event.start?.date);
-  const [selected, setSelected] = useState(null);
+  const [selectedId, setSelectedId] = useState(null);
+  const selected = entries.find(event => event.id === selectedId);
   const [removing, setRemoving] = useState(false);
   const [removeError, setRemoveError] = useState('');
 
-  useEffect(() => { setSelected(null); }, [date, preview?.summary, preview?.start?.dateTime, preview?.end?.dateTime]);
+  useEffect(() => { setSelectedId(null); }, [date]);
 
   function colorStyle(event) {
     if (event.proposed) return {};
@@ -114,7 +119,7 @@ function DayTimeline({ events, preview, date, timeZone, timelineRef, onRemove })
       const result = await response.json();
       if (!response.ok || !result.removed) throw new Error(result.error || 'Couldn’t remove this event.');
       onRemove(selected.id);
-      setSelected(null);
+      setSelectedId(null);
     } catch (error) {
       setRemoveError(error.message);
     } finally {
@@ -125,7 +130,7 @@ function DayTimeline({ events, preview, date, timeZone, timelineRef, onRemove })
   function selectEvent(event) {
     if (removing) return;
     setRemoveError('');
-    setSelected(event);
+    setSelectedId(event.id);
   }
 
   return (
@@ -155,13 +160,13 @@ function DayTimeline({ events, preview, date, timeZone, timelineRef, onRemove })
         </div>
       </div>
       {selected && <section className="selected-event" aria-label="Selected event details" aria-live="polite">
-        <button className="text-button" type="button" disabled={removing} onClick={() => setSelected(null)}>Close details</button>
+        <button className="text-button" type="button" disabled={removing} onClick={() => setSelectedId(null)}>Close details</button>
         <h3>{selected.summary || 'Untitled event'}</h3>
         <p>{eventTime(selected, timeZone)}</p>
         {selected.location && <p>{selected.location}</p>}
         {selected.transparency === 'transparent' && <p>Shown as available</p>}
         {removeError && <p role="alert">{removeError}</p>}
-        {onRemove && isBookedAndBusyEvent(selected.id) && <button className="review-skip-button" type="button" disabled={removing} onClick={removeSelected}>{removing ? 'Removing…' : 'Remove from calendar'}</button>}
+        {onRemove && !selected.proposed && isBookedAndBusyEvent(selected.id) && <button className="review-skip-button" type="button" disabled={removing} onClick={removeSelected}>{removing ? 'Removing…' : 'Remove from calendar'}</button>}
       </section>}
     </div>
   );

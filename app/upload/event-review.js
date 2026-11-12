@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import CalendarDay from '../calendar/calendar-day';
 import { prepareCalendarEvent } from '../calendar/event-insert';
-import { groupEventsByDay } from './review-events';
+import { groupEventsByDay, proposedEventsForDay } from './review-events';
 
 function formatDate(date) {
   return new Date(`${date}T12:00:00`).toLocaleDateString(undefined, {
@@ -44,7 +44,7 @@ function EventEditor({ event, onSave, onCancel }) {
   );
 }
 
-export default function EventReview({ events, onChange, onReject }) {
+export default function EventReview({ events, onChange, onReject, onUploadMore }) {
   const [selectedId, setSelectedId] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [addingId, setAddingId] = useState(null);
@@ -56,7 +56,8 @@ export default function EventReview({ events, onChange, onReject }) {
   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
   useEffect(() => {
-    heading.current?.focus();
+    heading.current?.focus({ preventScroll: true });
+    window.scrollTo(0, 0);
   }, []);
 
   async function updateCalendar(event, remove = false) {
@@ -99,16 +100,20 @@ export default function EventReview({ events, onChange, onReject }) {
     }
   }
 
-  const preview = selected.added ? null : prepareCalendarEvent({ ...selected, timeZone }).event;
+  const previews = proposedEventsForDay(events, selected.date, timeZone);
+  const focusedPreview = selected.added ? null : prepareCalendarEvent({ ...selected, timeZone }).event?.id;
 
   return (
     <section className="event-review" aria-labelledby="review-heading">
-      <h2 ref={heading} id="review-heading" tabIndex={-1}>Review events</h2>
+      <div className="review-heading-row">
+        <h1 ref={heading} id="review-heading" tabIndex={-1}>Review events</h1>
+        <button className="text-button" type="button" onClick={onUploadMore}>Upload more screenshots</button>
+      </div>
       <div className="review-layout">
         <div className="review-list" aria-label="Extracted events">
           {groupEventsByDay(events).map(([date, dayEvents]) => (
             <section key={date} className="review-day-group">
-              <h3 className="review-day-divider">{date ? new Date(`${date}T12:00:00`).toLocaleDateString(undefined, { weekday: 'long' }) : 'Date to confirm'}</h3>
+              <h3 className="review-day-divider">{date ? new Date(`${date}T12:00:00`).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' }) : 'Date to confirm'}</h3>
               <ul className="review-list">
                 {dayEvents.map(event => (
                   <li key={event.id}>
@@ -151,7 +156,7 @@ export default function EventReview({ events, onChange, onReject }) {
         <aside className="review-calendar" aria-label="Calendar for the selected event">
           <h3>Your calendar</h3>
           {selected.date
-            ? <CalendarDay key={`${selected.date}:${calendarVersion}`} initialDate={selected.date} fixedDate preview={preview} />
+            ? <CalendarDay key={`${selected.date}:${calendarVersion}`} initialDate={selected.date} fixedDate previews={previews} focusedPreview={focusedPreview} />
             : <p>Add a date to the selected event to see that day’s calendar.</p>}
         </aside>
       </div>
