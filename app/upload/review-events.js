@@ -7,18 +7,6 @@ export function eventFingerprint(event) {
   ]);
 }
 
-export function mergeExtractedEvents(current, incoming) {
-  const events = new Map(current.map(event => [event.fingerprint, event]));
-  for (const event of incoming) {
-    const existing = events.get(event.fingerprint);
-    events.set(event.fingerprint, existing ? {
-      ...existing,
-      screenshotIds: [...new Set([...existing.screenshotIds, ...event.screenshotIds])],
-    } : event);
-  }
-  return [...events.values()];
-}
-
 export function groupEventsByDay(events) {
   const groups = new Map();
   const start = event => event.allDay ? '' : event.startTime || '24:00';

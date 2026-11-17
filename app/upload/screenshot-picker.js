@@ -2,7 +2,16 @@
 
 import { useEffect, useRef, useState } from 'react';
 import EventReview from './event-review';
-import { eventFingerprint, mergeExtractedEvents } from './review-events';
+
+async function queueRequest(method = 'GET', body) {
+  const response = await fetch('/api/review', {
+    method, cache: 'no-store',
+    ...(body && { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }),
+  });
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.error || 'Couldn’t sync your review queue.');
+  return result;
+}
 
 const MAX_FILES = 10;
 const MAX_BYTES = 3 * 1024 * 1024;
@@ -16,10 +25,62 @@ export default function ScreenshotPicker() {
   const [reviewOpen, setReviewOpen] = useState(false);
   const reviewing = reviewOpen && events.length > 0;
   const [progress, setProgress] = useState('');
+  const [syncError, setSyncError] = useState('');
+  const queueRevision = useRef(0);
+  const writing = useRef(false);
+  const unsavedExtractions = useRef(new Map());
   const extractionRequest = useRef(null);
   const processing = useRef(false);
   const mounted = useRef(true);
   const urls = useRef(new Set());
+
+  async function refreshQueue() {
+    if (writing.current) return;
+    const revision = ++queueRevision.current;
+    try {
+      const { events } = await queueRequest();
+      if (mounted.current && revision === queueRevision.current) {
+        setEvents(events);
+        setSyncError('');
+      }
+    } catch (error) {
+      if (mounted.current && revision === queueRevision.current) setSyncError(error.message);
+    }
+  }
+
+  useEffect(() => {
+    function refreshWhenVisible() {
+      if (document.visibilityState === 'visible') refreshQueue();
+    }
+    refreshQueue();
+    window.addEventListener('focus', refreshWhenVisible);
+    document.addEventListener('visibilitychange', refreshWhenVisible);
+    const interval = window.setInterval(refreshWhenVisible, 15000);
+    return () => {
+      queueRevision.current++;
+      window.clearInterval(interval);
+      window.removeEventListener('focus', refreshWhenVisible);
+      document.removeEventListener('visibilitychange', refreshWhenVisible);
+    };
+  }, []);
+
+  async function changeEvent(event, fields) {
+    if (writing.current) throw new Error('Another change is syncing. Try again shortly.');
+    writing.current = true;
+    queueRevision.current++;
+    try {
+      const { event: updated } = await queueRequest(fields ? 'PATCH' : 'DELETE', {
+        queueId: event.queueId, version: event.version, fields,
+      });
+      setEvents(current => updated
+        ? current.map(item => item.queueId === event.queueId ? updated : item)
+        : current.filter(item => item.queueId !== event.queueId));
+      return updated;
+    } finally {
+      writing.current = false;
+      void refreshQueue();
+    }
+  }
 
   useEffect(() => {
     mounted.current = true;
@@ -75,9 +136,7 @@ export default function ScreenshotPicker() {
     URL.revokeObjectURL(image.url);
     urls.current.delete(image.url);
     setScreenshots(current => current.filter(item => item.id !== id));
-    setEvents(current => current.map(event => ({
-      ...event, screenshotIds: event.screenshotIds.filter(screenshotId => screenshotId !== id),
-    })).filter(event => event.screenshotIds.length > 0));
+    unsavedExtractions.current.delete(id);
   }
 
   async function extractEvents() {
@@ -100,15 +159,17 @@ export default function ScreenshotPicker() {
       const controller = new AbortController();
       extractionRequest.current = controller;
       try {
-        const response = await fetch('/api/extract', { method: 'POST', body: form, signal: controller.signal });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || 'Couldn’t process this screenshot.');
-        if (!mounted.current) break;
-        const suggestions = data.events.map(event => ({
-          ...event, id: crypto.randomUUID(), fingerprint: eventFingerprint(event), screenshotIds: [image.id],
-        }));
+        let suggestions = unsavedExtractions.current.get(image.id);
+        if (!suggestions) {
+          const response = await fetch('/api/extract', { method: 'POST', body: form, signal: controller.signal });
+          const data = await response.json();
+          if (!response.ok) throw new Error(data.error || 'Couldn’t process this screenshot.');
+          suggestions = data.events;
+          unsavedExtractions.current.set(image.id, suggestions);
+        }
+        if (suggestions.length) await queueRequest('POST', { events: suggestions });
+        unsavedExtractions.current.delete(image.id);
         if (suggestions.length > 0) foundEvents = true;
-        setEvents(current => mergeExtractedEvents(current, suggestions));
         setScreenshots(current => current.map(item => item.id === image.id ? { ...item, status: 'done', count: suggestions.length } : item));
       } catch (error) {
         if (controller.signal.aborted) break;
@@ -117,6 +178,7 @@ export default function ScreenshotPicker() {
     }
     processing.current = false;
     if (mounted.current) {
+      if (foundEvents) await refreshQueue();
       setBusy(false);
       setProgress('');
       setError(failures.join(' '));
@@ -131,8 +193,9 @@ export default function ScreenshotPicker() {
         <li aria-current={reviewing ? 'step' : undefined}><span>2</span>Review events</li>
         <li><span>3</span>Add your plans</li>
       </ol>
-      {reviewing && <EventReview events={events} onUploadMore={() => setReviewOpen(false)} onChange={(id, fields) => setEvents(current => current.map(event => event.id === id ? { ...event, ...fields } : event))} onReject={id => setEvents(current => current.filter(event => event.id !== id))} />}
+      {reviewing && <EventReview events={events} onUploadMore={() => setReviewOpen(false)} onChange={changeEvent} onReject={changeEvent} />}
       {error && <p className="auth-error" role="alert">{error}</p>}
+      {syncError && <p role="status">{syncError} <button className="text-button" type="button" onClick={refreshQueue}>Retry sync</button></p>}
       <section hidden={reviewing} aria-labelledby="upload-heading">
         <h1 id="upload-heading">Start with a screenshot.</h1>
         <p className="upload-description">Choose screenshots from group chats, flyers, or invites. Make sure the event name, date, time, and location are visible.</p>
@@ -152,9 +215,9 @@ export default function ScreenshotPicker() {
           </label>
           <p className="upload-limits">PNG, JPG, or WebP · Up to 10 images · 3 MB each</p>
         </div>
-        <p className="upload-note">Extract events sends your selected screenshots to Google Gemini to read the event details. Screenshots and edits stay in this tab until you leave or refresh.</p>
+        <p className="upload-note">Extract events sends your screenshots to Google Gemini. Extracted events sync to your account so you can review them on another device.</p>
         {screenshots.some(image => image.status !== 'done') && <button className="primary-button" type="button" disabled={busy} onClick={extractEvents}>{busy ? 'Working…' : 'Extract events'}</button>}
-        {events.length > 0 && <button className="primary-button" type="button" disabled={busy} onClick={() => setReviewOpen(true)}>Review events</button>}
+        {events.length > 0 && <button className="primary-button" type="button" disabled={busy} onClick={() => setReviewOpen(true)}>Review events ({events.length})</button>}
         <p role="status">{progress}</p>
         <p aria-live="polite">{screenshots.length > 0 && `${screenshots.length} screenshot${screenshots.length === 1 ? '' : 's'} selected`}</p>
         <ul className="screenshot-grid">

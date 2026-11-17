@@ -84,16 +84,35 @@ export default function EventReview({ events, onChange, onReject, onUploadMore }
         setFeedback({ id: event.id, message: result.error || 'Couldn’t update Google Calendar. Try again.', reconnect: result.reconnect });
         return;
       }
-      if (remove) {
-        const id = crypto.randomUUID();
-        onChange(event.id, { id, added: false, calendarEventId: null });
-        setSelectedId(id);
-      } else {
-        onChange(event.id, { added: true, calendarEventId: result.eventId });
-      }
       setCalendarVersion(version => version + 1);
+      try {
+        const updated = await onChange(event, { added: !remove });
+        setSelectedId(updated.id);
+      } catch (error) {
+        setFeedback({ id: event.id, message: `Google Calendar was updated, but the review queue didn’t sync. ${error.message}` });
+      }
     } catch {
       setFeedback({ id: event.id, message: 'Couldn’t update Google Calendar. Try again.' });
+    } finally {
+      saving.current = false;
+      setAddingId(null);
+    }
+  }
+
+  async function saveReviewChange(event, fields) {
+    if (saving.current) return;
+    saving.current = true;
+    setAddingId(event.id);
+    setFeedback(null);
+    try {
+      if (fields) {
+        await onChange(event, fields);
+        setEditingId(null);
+      } else {
+        await onReject(event);
+      }
+    } catch (error) {
+      setFeedback({ id: event.id, message: error.message });
     } finally {
       saving.current = false;
       setAddingId(null);
@@ -107,7 +126,7 @@ export default function EventReview({ events, onChange, onReject, onUploadMore }
     <section className="event-review" aria-labelledby="review-heading">
       <div className="review-heading-row">
         <h1 ref={heading} id="review-heading" tabIndex={-1}>Review events</h1>
-        <button className="text-button" type="button" onClick={onUploadMore}>Upload more screenshots</button>
+        <button className="text-button" type="button" disabled={Boolean(addingId)} onClick={onUploadMore}>Upload more screenshots</button>
       </div>
       <div className="review-layout">
         <div className="review-list" aria-label="Extracted events">
@@ -135,15 +154,11 @@ export default function EventReview({ events, onChange, onReject, onUploadMore }
                       {event.notes.length > 0 && !event.added && <details className="review-notes"><summary>Extraction notes</summary><ul>{event.notes.map((note, index) => <li key={index}>{note}</li>)}</ul></details>}
                       {feedback?.id === event.id && <p role="alert" className="review-warning">{feedback.message} {feedback.reconnect && <Link href="/account">Manage Calendar connection</Link>}</p>}
                       {event.added ? <div className="review-actions"><p className="review-added" role="status">Added to Google Calendar</p><button className="review-skip-button" type="button" disabled={Boolean(addingId)} onClick={() => updateCalendar(event, true)}>{addingId === event.id ? 'Removing…' : 'Remove from calendar'}</button></div> : editingId === event.id ? (
-                        <EventEditor key={event.id} event={event} onCancel={() => setEditingId(null)} onSave={draft => {
-                          onChange(event.id, draft);
-                          setFeedback(null);
-                          setEditingId(null);
-                        }} />
+                        <EventEditor key={`${event.id}:${event.version}`} event={event} onCancel={() => setEditingId(null)} onSave={draft => saveReviewChange(event, draft)} />
                       ) : (
                         <div className="review-actions">
                           <button className="primary-button" type="button" disabled={Boolean(addingId)} onClick={() => updateCalendar(event)}>{addingId === event.id ? 'Adding…' : 'Add to calendar'}</button>
-                          <button className="review-skip-button" type="button" disabled={Boolean(addingId)} onClick={() => onReject(event.id)}>Skip this</button>
+                          <button className="review-skip-button" type="button" disabled={Boolean(addingId)} onClick={() => saveReviewChange(event)}>Skip this</button>
                         </div>
                       )}
                     </article>
