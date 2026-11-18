@@ -26,16 +26,16 @@ const box = await page.locator('.demo-window').boundingBox();
 const pad = 14;
 const crop = [box.width + pad * 2, box.height + pad * 2, box.x - pad, box.y - pad].map(n => Math.round(n)).map(n => n - (n % 2)).join(':');
 await page.evaluate(() => document.querySelector('[aria-label="Restart demo"]').click());
-await page.waitForTimeout(19500);
+await page.waitForTimeout(22500);
 await context.close();
 await browser.close();
 
 const video = join(videoDir, readdirSync(videoDir)[0]);
 const skip = 0.6;
 mkdirSync(out, { recursive: true });
-execFileSync('ffmpeg', ['-y', '-ss', String(skip), '-t', '18.6', '-i', video,
+execFileSync('ffmpeg', ['-y', '-ss', String(skip), '-t', '21.6', '-i', video,
   '-vf', `crop=${crop},fps=10,scale=760:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=96:stats_mode=diff[p];[b][p]paletteuse=dither=bayer:bayer_scale=4:diff_mode=rectangle`,
   '-loop', '0', join(out, 'review-demo.gif')], { stdio: 'inherit' });
-execFileSync('ffmpeg', ['-y', '-ss', String(skip), '-t', '18.6', '-i', video, '-an', '-vf', `crop=${crop},scale=1100:-2`, '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', join(out, 'review-demo.mp4')], { stdio: 'inherit' });
+execFileSync('ffmpeg', ['-y', '-ss', String(skip), '-t', '21.6', '-i', video, '-an', '-vf', `crop=${crop},scale=1100:-2`, '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', join(out, 'review-demo.mp4')], { stdio: 'inherit' });
 rmSync(videoDir, { recursive: true, force: true });
 console.log(`Saved ${out}/review-demo.gif and ${out}/review-demo.mp4`);

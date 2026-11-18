@@ -11,10 +11,17 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 const START_HOUR = 9;
 const END_HOUR = 24;
 
-const SHOTS = [
-  { id: 's0', kind: 'chat', source: 'GroupMe', from: 'Club Soccer 🥅', lines: ['IM game vs Delta this Sat 4pm, field 3', 'be there!! 🔥'] },
-  { id: 's1', kind: 'invite', source: 'Flare', title: '✨ Fall Formal', meta: ['Sat, Nov 22 · 9 PM', 'The Boathouse'] },
-  { id: 's2', kind: 'email', source: 'Email', from: 'Prof. Diaz', subject: 'Office hours moved', lines: ['This week only: Thu 3–4pm', 'Hamilton Hall 312'] },
+// Camera-roll tiles on the phone. The three with a `source` are the event screenshots.
+const ROLL = [
+  { source: 'GroupMe', kind: 'chat' }, { kind: 'photo', tone: 'a' }, { kind: 'photo', tone: 'b' },
+  { kind: 'photo', tone: 'c' }, { source: 'Flare', kind: 'invite' }, { kind: 'photo', tone: 'd' },
+  { kind: 'photo', tone: 'e' }, { kind: 'photo', tone: 'f' }, { source: 'Email', kind: 'email' },
+];
+
+const UPLOADS = [
+  { source: 'GroupMe', label: 'Club Soccer chat' },
+  { source: 'Flare', label: 'Fall Formal invite' },
+  { source: 'Email', label: 'Prof. Diaz' },
 ];
 
 const EVENTS = [
@@ -35,22 +42,21 @@ const DAYS = {
   ] },
 };
 
-const CAPTIONS = {
-  upload: 'Drop in screenshots from anywhere',
-  scan: 'Booked and Busy reads the details',
-  review: 'Check each plan against your real calendar',
-  done: 'Add it in one click — or skip it',
-};
+const STEPS = ['Upload screenshots from your phone', 'It syncs to your laptop', 'Check each plan against your calendar', 'Add it in one click — or skip it'];
+const STEP_OF = { pick: 0, extract: 0, sync: 1, handoff: 1, review: 2, done: 3 };
+const PHONE_PHASES = ['pick', 'extract', 'sync', 'handoff'];
 
-const INITIAL = { phase: 'upload', selected: 'e0', status: { e0: 'idle', e1: 'idle', e2: 'idle' }, cursor: null, click: false };
+const INITIAL = { phase: 'pick', selected: 'e0', status: { e0: 'idle', e1: 'idle', e2: 'idle' }, cursor: null, click: false };
 
 const set = patch => state => ({ ...state, ...patch });
 const status = (id, value) => state => ({ ...state, status: { ...state.status, [id]: value } });
 
 const TIMELINE = [
-  [1900, set({ phase: 'scan' })],
-  [2000, set({ phase: 'review', selected: 'e0' })],
-  [1300, set({ cursor: 'add-e0' })],
+  [2900, set({ phase: 'extract' })],
+  [2400, set({ phase: 'sync' })],
+  [1900, set({ phase: 'handoff', selected: 'e0' })],
+  [800, set({ phase: 'review' })],
+  [1000, set({ cursor: 'add-e0' })],
   [800, set({ click: true })],
   [180, s => status('e0', 'adding')(set({ click: false })(s))],
   [700, status('e0', 'added')],
@@ -68,26 +74,43 @@ const TIMELINE = [
   [3600, () => INITIAL],
 ];
 
-function Shot({ shot, index }) {
+function Phone({ phase }) {
   return (
-    <figure className={`demo-shot demo-shot-${shot.kind}`} style={{ '--i': index }}>
-      <figcaption>{shot.source}</figcaption>
-      {shot.kind === 'chat' && <>
-        <p className="demo-shot-from"><span aria-hidden="true">👥</span>{shot.from}</p>
-        {shot.lines.map(line => <p key={line} className="demo-bubble">{line}</p>)}
-      </>}
-      {shot.kind === 'invite' && <>
-        <div className="demo-invite-art" aria-hidden="true" />
-        <p className="demo-invite-title">{shot.title}</p>
-        {shot.meta.map(line => <p key={line} className="demo-invite-meta">{line}</p>)}
-        <span className="demo-rsvp">RSVP</span>
-      </>}
-      {shot.kind === 'email' && <>
-        <p className="demo-shot-from"><span aria-hidden="true">✉️</span>{shot.from}</p>
-        <p className="demo-email-subject">{shot.subject}</p>
-        {shot.lines.map(line => <p key={line} className="demo-email-line">{line}</p>)}
-      </>}
-    </figure>
+    <div className="demo-phone" data-phase={phase}>
+      <span className="demo-phone-notch" />
+      {phase === 'pick' && (
+        <div className="demo-phone-screen">
+          <p className="demo-phone-head"><span>Cancel</span><b>Recents</b><span /></p>
+          <div className="demo-roll">
+            {ROLL.map((tile, index) => (
+              <span key={index} className={`demo-tile demo-tile-${tile.kind} ${tile.tone ? `tone-${tile.tone}` : ''}`} data-picked={Boolean(tile.source)} style={{ '--pick': ROLL.slice(0, index).filter(t => t.source).length }}>
+                {tile.source && <i className="demo-tile-check">✓</i>}
+              </span>
+            ))}
+          </div>
+          <span className="demo-phone-btn demo-tap">Add 3 screenshots</span>
+        </div>
+      )}
+      {phase !== 'pick' && (
+        <div className="demo-phone-screen">
+          <p className="demo-phone-brand">Booked and Busy<span className="brand-dot">.</span></p>
+          <p className="demo-phone-title">{phase === 'extract' ? 'Finding your events…' : '3 events found'}</p>
+          <ul className="demo-uploads">
+            {UPLOADS.map((item, index) => (
+              <li key={item.source} style={{ '--i': index }}>
+                <span className={`demo-upload-thumb thumb-${item.source.toLowerCase()}`} />
+                <div><b>{item.label}</b><small>{item.source}</small></div>
+                <i className="demo-upload-status" />
+              </li>
+            ))}
+          </ul>
+          <div className="demo-phone-progress"><span /></div>
+          {phase === 'extract'
+            ? <span className="demo-phone-btn is-busy">Extracting events…</span>
+            : <p className="demo-phone-synced">✓ Saved to your account<small>Review on any device</small></p>}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -154,10 +177,16 @@ export default function ReviewDemo() {
       setState({ ...INITIAL, phase: 'review', selected: 'e1', status: { e0: 'added', e1: 'idle', e2: 'idle' } });
       return;
     }
+    // "On screen" means a good chunk of the viewport shows the demo. Measuring
+    // against the viewport (not the demo's own height) keeps it playing on
+    // phones, where the stacked review screen is taller than the screen.
     const observer = new IntersectionObserver(([entry]) => {
-      visible.current = entry.isIntersecting;
-      if (!userPaused.current) setPlaying(entry.isIntersecting);
-    }, { threshold: 0.35 });
+      const viewport = entry.rootBounds?.height || window.innerHeight;
+      const needed = 0.35 * Math.min(entry.boundingClientRect.height, viewport);
+      const onScreen = entry.isIntersecting && entry.intersectionRect.height >= needed;
+      visible.current = onScreen;
+      if (!userPaused.current) setPlaying(onScreen);
+    }, { threshold: Array.from({ length: 21 }, (_, i) => i / 20) });
     observer.observe(frame.current);
     return () => observer.disconnect();
   }, []);
@@ -205,10 +234,11 @@ export default function ReviewDemo() {
   }
 
   const selected = EVENTS.find(event => event.id === state.selected);
-  const reviewing = state.phase === 'review' || state.phase === 'done';
+  const reviewing = ['handoff', 'review', 'done'].includes(state.phase);
+  const onPhone = PHONE_PHASES.includes(state.phase);
   const added = Object.values(state.status).filter(value => value === 'added').length;
   const skipped = Object.values(state.status).filter(value => value === 'skipped').length;
-  const phaseIndex = ['upload', 'scan', 'review', 'done'].indexOf(state.phase);
+  const phaseIndex = STEP_OF[state.phase];
 
   return (
     <div className="demo">
@@ -220,14 +250,15 @@ export default function ReviewDemo() {
 
         <div className="demo-body" aria-hidden="true">
           {!reviewing && (
-            <div className="demo-upload">
-              <p className="demo-eyebrow">STEP 1 · UPLOAD</p>
-              <p className="demo-title">Start with a screenshot.</p>
-              <div className="demo-shots">
-                {SHOTS.map((shot, index) => <Shot key={shot.id} shot={shot} index={index} />)}
+            <div className="demo-waiting">
+              <div className="demo-review-head">
+                <p className="demo-title">Review events</p>
+                <span className="demo-link">Upload more screenshots</span>
               </div>
-              <div className="demo-progress"><span /></div>
-              <p className="demo-progress-label">{state.phase === 'scan' ? 'Finding events in 3 screenshots…' : '3 screenshots selected'}</p>
+              <div className="demo-empty" data-incoming={state.phase === 'sync'}>
+                <span className="demo-empty-icon">{state.phase === 'sync' ? '↓' : '💻'}</span>
+                <p>{state.phase === 'sync' ? '3 events syncing from your phone…' : 'Waiting for screenshots from your phone'}</p>
+              </div>
             </div>
           )}
 
@@ -279,6 +310,10 @@ export default function ReviewDemo() {
             </div>
           )}
 
+          {onPhone && <div className="demo-scrim" data-leaving={state.phase === 'handoff'} />}
+          {onPhone && <Phone phase={state.phase} />}
+          {(state.phase === 'sync') && <span className="demo-sync-pill">✓ Synced to your laptop</span>}
+
           {state.phase === 'done' && (
             <div className="demo-toast">
               <span className="demo-toast-spark" aria-hidden="true">✳</span>
@@ -297,9 +332,9 @@ export default function ReviewDemo() {
 
       <div className="demo-controls">
         <ol className="demo-steps">
-          {['upload', 'scan', 'review', 'done'].map((phase, index) => (
-            <li key={phase} data-active={index === phaseIndex} data-past={index < phaseIndex}>
-              <span>{index + 1}</span>{CAPTIONS[phase]}
+          {STEPS.map((label, index) => (
+            <li key={label} data-active={index === phaseIndex} data-past={index < phaseIndex}>
+              <span>{index + 1}</span>{label}
             </li>
           ))}
         </ol>
@@ -308,7 +343,7 @@ export default function ReviewDemo() {
           <button type="button" onClick={restart} aria-label="Restart demo">↺ Restart</button>
         </div>
       </div>
-      <p className="visually-hidden" aria-live="polite">{`Demo: ${CAPTIONS[state.phase]}.`}</p>
+      <p className="visually-hidden" aria-live="polite">{`Demo: ${STEPS[phaseIndex]}.`}</p>
     </div>
   );
 }
