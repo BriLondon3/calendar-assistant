@@ -85,7 +85,7 @@ export default function EventReview({ events, onChange, onReject, onUploadMore }
 
   useEffect(() => {
     if (!undoId) return;
-    const timer = setTimeout(() => setUndoId(null), 8000);
+    const timer = setTimeout(() => setUndoId(null), 4000);
     return () => clearTimeout(timer);
   }, [undoId]);
 
