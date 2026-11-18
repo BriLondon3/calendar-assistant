@@ -1,6 +1,12 @@
 # Booked and Busy
 
-A simple Next.js homepage for Booked and Busy, by Bri London.
+**Screenshot it. Schedule it.** Booked and Busy turns screenshots from GroupMe, Flare, texts, emails, and flyers into calendar events. Review each one next to your Google Calendar, then add it in one click. By Bri London.
+
+![Booked and Busy review demo](public/demo/review-demo.gif)
+
+## Demo recording
+
+The homepage demo (`app/components/review-demo.js`) is an animated recreation of the review screen using sample events; it never calls the API. To re-record `public/demo/review-demo.gif` and `.mp4` after changing it, start the app and run `node scripts/record-demo-gif.mjs http://localhost:3000` (needs Playwright with Chromium and ffmpeg).
 
 ## Local development
 
