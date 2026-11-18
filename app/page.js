@@ -43,7 +43,7 @@ const FAQS = [
   { q: 'What if it reads something wrong?', a: 'Tap the pencil on any event to edit the name, dates, times, location, or description before you add it. If a detail was unclear in the screenshot, the event shows extraction notes so you know what to double-check.' },
   { q: 'Which calendars does it work with?', a: 'Google Calendar today. You connect it once from your account page and choose which plans to add. More calendar apps are on the roadmap.' },
   { q: 'Is my info private?', a: 'Your screenshots are sent to Google Gemini only to read the event details. Calendar access is limited to events on calendars you own, your Google connection is encrypted (AES-256-GCM), and your review list is only visible to your account. You can disconnect Google Calendar at any time from your account page.' },
-  { q: 'Can I use it on my phone?', a: 'Yes. Booked and Busy runs in your browser, so you can upload straight from your camera roll. Your review list syncs, so you can upload on your phone and review on your laptop.' },
+  { q: 'Do I use it on my phone or my laptop?', a: 'Both — that’s the idea. Upload screenshots from your phone, where they already are, then review them on your laptop, where your calendar is easier to see. Your review list syncs to your account, so it shows up on any device you log in on. There’s nothing to install; it runs in your browser.' },
 ];
 
 function Sparks({ className }) {
@@ -76,7 +76,7 @@ export default async function Home() {
               <Link className="primary-button lp-button-lg" href={startHref}>{startLabel} <span aria-hidden="true">→</span></Link>
               <a className="lp-ghost-button" href="#demo">Watch it work</a>
             </div>
-            <p className="lp-cta-note"><strong>$2.99/month</strong> · Works with Google Calendar · Nothing gets added without your OK</p>
+            <p className="lp-cta-note"><strong>$2.99/month</strong> · Upload from your phone, review on your laptop · Works with Google Calendar</p>
           </div>
 
           <div className="lp-wrap lp-demo-wrap" id="demo">
@@ -139,7 +139,7 @@ export default async function Home() {
                 </div>
                 <span className="lp-step-num">01</span>
                 <h3>Upload your screenshots</h3>
-                <p>Drop in up to 10 at once: group chats, invites, emails, flyers. Booked and Busy reads every event out of them.</p>
+                <p>Upload up to 10 at once, right from your phone’s camera roll: group chats, invites, emails, flyers. Booked and Busy reads every event out of them.</p>
               </li>
               <li>
                 <div className="lp-step-art lp-art-review" aria-hidden="true">
@@ -261,14 +261,69 @@ export default async function Home() {
           </div>
         </section>
 
-        {/* Final CTA */}
-        <section className="lp-wrap" aria-labelledby="final-heading">
-          <div className="lp-final">
-            <Sparks className="final-sparks-a" />
-            <Sparks className="final-sparks-b" />
-            <h2 id="final-heading">The group chat already made the plans.<br /><em>Let’s get them on your calendar.</em></h2>
-            <Link className="lp-final-button" href={startHref}>{startLabel} <span aria-hidden="true">→</span></Link>
-            <p>$2.99/month · Google Calendar</p>
+        {/* Ending: phone → laptop */}
+        <section className="lp-devices" aria-labelledby="final-heading">
+          <div className="lp-wrap lp-devices-inner">
+            <div className="lp-devices-copy">
+              <p className="lp-eyebrow">Phone + laptop</p>
+              <h2 id="final-heading">Screenshot on your phone.<br /><em>Plan on your laptop.</em></h2>
+              <p>Your screenshots already live on your phone, so upload them straight from your camera roll, even while walking to class. Everything syncs to your account, so when you open your laptop it’s waiting for you next to your full calendar.</p>
+              <ul className="lp-device-points">
+                <li><span aria-hidden="true">📱</span><div><strong>Upload from your camera roll</strong>No AirDropping or emailing screenshots to yourself.</div></li>
+                <li><span aria-hidden="true">🔄</span><div><strong>Syncs on its own</strong>Your review list follows you to any device you log in on.</div></li>
+                <li><span aria-hidden="true">💻</span><div><strong>Review on the big screen</strong>See your whole day next to each event before you add it.</div></li>
+              </ul>
+            </div>
+
+            <div className="lp-device-scene" aria-hidden="true">
+              <div className="lp-laptop">
+                <div className="lp-laptop-screen">
+                  <div className="lp-laptop-bar"><i /><i /><i /></div>
+                  <div className="lp-laptop-body">
+                    <div className="lp-laptop-list">
+                      <p className="mini-day-label">Friday, Apr 10</p>
+                      <div className="mini-card mini-card-sel">
+                        <p className="mini-card-title">Spring Date Party</p>
+                        <p className="mini-card-meta"><b>Fri, Apr 10</b><br />9:00 PM – 1:00 AM</p>
+                        <div className="mini-card-actions"><span className="mini-add">Add to calendar</span><span className="mini-skip">Skip</span></div>
+                      </div>
+                      <div className="mini-card">
+                        <p className="mini-card-title">Philanthropy 5K</p>
+                        <p className="mini-card-meta"><b>Sat, Apr 11</b><br />8:00 AM – 11:00 AM</p>
+                      </div>
+                    </div>
+                    <div className="lp-laptop-cal">
+                      <p className="mini-day-label">Your calendar</p>
+                      <div className="mini-day">
+                        <span className="mini-ev" style={{ top: 8, height: 26, background: '#7986cb' }}>ECON 101</span>
+                        <span className="mini-ev" style={{ top: 40, height: 34, background: '#33b679' }}>Exec meeting</span>
+                        <span className="mini-ev" style={{ top: 84, height: 22, background: '#f4511e' }}>Gym</span>
+                        <span className="mini-ev mini-ev-proposed" style={{ top: 120, height: 48 }}>Date party</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="lp-laptop-base" />
+              </div>
+
+              <div className="lp-phone">
+                <span className="lp-phone-notch" />
+                <p className="lp-phone-title">Start with a screenshot.</p>
+                <div className="lp-phone-grid">
+                  <span className="t-blue" /><span className="t-orange" /><span className="t-white" />
+                  <span className="t-sky" /><span className="t-white" /><span className="t-blue" />
+                </div>
+                <span className="lp-phone-btn">Extract events (6)</span>
+              </div>
+
+              <span className="lp-sync-pill">✓ Synced</span>
+              <svg className="lp-sync-arrow" viewBox="0 0 160 90"><path d="M8 78 C 40 10, 110 4, 150 30" /><path d="M136 18 L151 31 L132 37" /></svg>
+            </div>
+
+            <div className="lp-devices-cta">
+              <Link className="primary-button lp-button-lg" href={startHref}>{startLabel} <span aria-hidden="true">→</span></Link>
+              <p><strong>$2.99/month</strong><br />Sign in with Google</p>
+            </div>
           </div>
         </section>
       </main>
