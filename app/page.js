@@ -6,23 +6,26 @@ import './landing.css';
 
 export const dynamic = 'force-dynamic';
 
+// Hero background style (see .lp[data-bg] in landing.css).
+const BACKGROUND = 'grid';
+
 const SOURCES = ['GroupMe', 'Flare', 'iMessage', 'Email', 'Flyers', 'Instagram stories', 'Discord', 'Class announcements', 'Slack', 'Event posters'];
 
 const CHAOS = [
   { app: 'GroupMe · Club Soccer', text: 'IM game vs Delta this Sat 4pm, field 3. be there!!', tone: 'blue' },
   { app: 'Flare', text: '✨ Fall Formal — Sat, Nov 22 · 9 PM · The Boathouse', tone: 'orange' },
   { app: 'Email · Prof. Diaz', text: 'Office hours moved: this week only, Thu 3–4pm', tone: 'white' },
-  { app: 'Text · Maya', text: 'brunch sunday 11?? the usual spot 🥞', tone: 'sky' },
-  { app: 'Flyer', text: 'CAREER FAIR · Wed 10am–2pm · Student Union Ballroom', tone: 'white' },
+  { app: 'Text · Jess', text: 'bday dinner fri 8pm @ Carmine’s, then going out after 🎂', tone: 'sky' },
+  { app: 'Email · Recruiting', text: 'Coffee chat confirmed: Tue 2:30pm, Blue Bottle on Main', tone: 'white' },
 ];
 
 const USE_CASES = [
-  { emoji: '💬', title: 'Club & org meetings', copy: 'The weekly “meeting moved to Rm 204” buried 300 messages deep in GroupMe.' },
-  { emoji: '🎉', title: 'Parties & socials', copy: 'Flare invites, formals, and date parties — with the address already filled in.' },
-  { emoji: '📚', title: 'Class curveballs', copy: 'Rescheduled exams, review sessions, and office hours from professor emails.' },
-  { emoji: '⚽', title: 'Game days & intramurals', copy: 'Practice times, IM schedules, and tailgates your team posts in the chat.' },
-  { emoji: '💼', title: 'Career stuff', copy: 'Info sessions, career fairs, and coffee chats from flyers and recruiter emails.' },
-  { emoji: '🧋', title: 'Friend plans', copy: 'The “wait, what time is brunch?” texts — so you actually show up.' },
+  { emoji: '🪩', title: 'Your social calendar', copy: 'Darties, date parties, formals, birthday dinners, and the pregame before — with the time and address already filled in.' },
+  { emoji: '🏛️', title: 'Chapter life', copy: 'Chapter, homecoming week, philanthropy events, and every “mandatory, no excuses” post from your sorority or fraternity GroupMe.' },
+  { emoji: '📣', title: 'Club & org life', copy: 'GBMs, division meetings, team check-ins, and the trip sign-up that’s due Friday.' },
+  { emoji: '📋', title: 'Running the show', copy: 'On exec? Exec meetings, Zooms with your advisor, and event setup at 6 — everything you’re responsible for, in one place.' },
+  { emoji: '💼', title: 'Recruiting season', copy: 'Recruiter emails, job fairs, info sessions, and coffee chats, on your calendar before you forget to reply.' },
+  { emoji: '📚', title: 'Class curveballs', copy: 'Rescheduled exams, review sessions, and office hours from professor emails and course announcements.' },
 ];
 
 const FEATURES = [
@@ -57,7 +60,7 @@ export default async function Home() {
   const startLabel = user ? 'Upload screenshots' : 'Get started';
 
   return (
-    <div className="lp">
+    <div className="lp" data-bg={BACKGROUND}>
       <div className="lp-wrap">
         <SiteHeader user={user} variant="marketing" />
       </div>
@@ -77,8 +80,6 @@ export default async function Home() {
           </div>
 
           <div className="lp-wrap lp-demo-wrap" id="demo">
-            <span className="lp-sticker lp-sticker-left" aria-hidden="true">no more typing<br />it in by hand ✍️</span>
-            <span className="lp-sticker lp-sticker-right" aria-hidden="true">see conflicts<br />before you say yes 👀</span>
             <ReviewDemo />
           </div>
         </section>
@@ -112,7 +113,7 @@ export default async function Home() {
               <li><span aria-hidden="true">⌨️</span><div><strong>Typing every event by hand</strong> — title, time, address, the whole thing.</div></li>
               <li><span aria-hidden="true">🫠</span><div><strong>Finding the conflict too late</strong>, when you’re already double-booked.</div></li>
             </ul>
-            <p className="lp-problem-kicker">You already screenshot everything. Booked and Busy makes those screenshots do the work.</p>
+            <p className="lp-problem-kicker">Your camera roll is full of plans. Your calendar should be too.</p>
           </div>
         </section>
 
@@ -124,17 +125,34 @@ export default async function Home() {
             <ol className="lp-steps">
               <li>
                 <div className="lp-step-art lp-art-upload" aria-hidden="true">
-                  <span className="lp-art-frame" />
-                  <span className="lp-art-phone"><i /><i /><i className="short" /></span>
+                  <div className="mini-shot mini-shot-back">
+                    <p className="mini-from">👥 Chapter chat</p>
+                    <p className="mini-bubble">Date party Fri 9pm!! buses leave from the house 🚌</p>
+                  </div>
+                  <div className="mini-shot mini-shot-front">
+                    <span className="mini-corner tl" /><span className="mini-corner br" />
+                    <div className="mini-invite-art" />
+                    <p className="mini-invite-title">🌹 Spring Date Party</p>
+                    <p className="mini-invite-meta">Fri · 9 PM · The Venue</p>
+                  </div>
+                  <span className="mini-pill">↑ 2 screenshots</span>
                 </div>
                 <span className="lp-step-num">01</span>
                 <h3>Upload your screenshots</h3>
-                <p>Drop in up to 10 at once — group chats, invites, emails, flyers. Booked and Busy reads every event out of them.</p>
+                <p>Drop in up to 10 at once: group chats, invites, emails, flyers. Booked and Busy reads every event out of them.</p>
               </li>
               <li>
                 <div className="lp-step-art lp-art-review" aria-hidden="true">
-                  <span className="lp-art-card"><i /><i className="short" /><b>✎</b></span>
-                  <span className="lp-art-cal"><i className="solid" /><i className="dashed" /></span>
+                  <div className="mini-card">
+                    <p className="mini-card-title">Spring Date Party</p>
+                    <p className="mini-card-meta"><b>Fri, Apr 10</b><br />9:00 PM – 1:00 AM</p>
+                    <div className="mini-card-actions"><span className="mini-add">Add to calendar</span><span className="mini-skip">Skip</span></div>
+                  </div>
+                  <div className="mini-day">
+                    <span className="mini-ev" style={{ top: 10, height: 30, background: '#33b679' }}>Shift</span>
+                    <span className="mini-ev" style={{ top: 50, height: 26, background: '#8e24aa' }}>Lab</span>
+                    <span className="mini-ev mini-ev-proposed" style={{ top: 92, height: 44 }}>Date party</span>
+                  </div>
                 </div>
                 <span className="lp-step-num">02</span>
                 <h3>Review against your calendar</h3>
@@ -142,9 +160,14 @@ export default async function Home() {
               </li>
               <li>
                 <div className="lp-step-art lp-art-add" aria-hidden="true">
-                  <span className="lp-art-btn">Add to calendar</span>
-                  <span className="lp-art-check">✓</span>
-                  <Sparks className="art-sparks" />
+                  <div className="mini-gcal">
+                    <p className="mini-gcal-head"><span>FRI</span><b>10</b></p>
+                    <div className="mini-gcal-grid">
+                      <span className="mini-ev" style={{ top: 6, height: 28, background: '#7986cb' }}>ECON 101</span>
+                      <span className="mini-ev mini-ev-added" style={{ top: 46, height: 52 }}><b>Spring Date Party</b>9 PM – 1 AM · The Venue</span>
+                    </div>
+                  </div>
+                  <span className="mini-added">✓ Added to Google Calendar</span>
                 </div>
                 <span className="lp-step-num">03</span>
                 <h3>Add it in one click</h3>
@@ -159,9 +182,9 @@ export default async function Home() {
           <div className="lp-campus-head">
             <div>
               <p className="lp-eyebrow">Made for college life</p>
-              <h2 id="campus-heading">Built for the group chat era.</h2>
+              <h2 id="campus-heading">From date party to office hours.</h2>
             </div>
-            <p>Between classes, clubs, work, and actually having a social life, your week moves fast. Booked and Busy keeps up with it.</p>
+            <p>Classes, chapter, recruiting, your org, your friends, and whatever’s happening Thursday. If it showed up in a screenshot, it can go on your calendar.</p>
           </div>
           <ul className="lp-uses">
             {USE_CASES.map(item => (
@@ -205,8 +228,9 @@ export default async function Home() {
           <div className="lp-wrap lp-pricing-inner">
             <div className="lp-pricing-copy">
               <p className="lp-eyebrow">Pricing</p>
-              <h2 id="pricing-heading">Less than one iced coffee a month.</h2>
-              <p>One simple plan with everything included. If it saves you from missing one thing you actually wanted to go to, it’s paid for itself.</p>
+              <h2 id="pricing-heading">Caffeinate me. I’ll organize your semester.</h2>
+              <p>$2.99 a month is less than one cold brew. It keeps Booked and Busy running, and it keeps me caffeinated enough to keep making it better. You get every feature, and the next one I build.</p>
+              <p className="lp-pricing-sig">— Bri, founder &amp; chief coffee drinker ☕</p>
             </div>
             <div className="lp-price-card">
               <p className="lp-price-plan">Booked and Busy</p>

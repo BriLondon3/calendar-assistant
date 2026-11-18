@@ -30,7 +30,7 @@ const DAYS = {
     { title: 'Gym', start: 17.5, end: 18.5, color: '#f4511e' },
   ] },
   sat: { label: 'Saturday, Nov 22', existing: [
-    { title: 'Brunch w/ roommates', start: 11, end: 12, color: '#e8a800' },
+    { title: 'Tailgate 🏈', start: 11, end: 13, color: '#e8a800' },
     { title: 'Chem study group', start: 16.5, end: 18, color: '#8e24aa', overlaps: 'e1' },
   ] },
 };
