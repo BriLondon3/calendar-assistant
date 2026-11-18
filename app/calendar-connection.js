@@ -38,6 +38,17 @@ export async function saveCalendarConnection(client, session) {
   return true;
 }
 
+// Cheap check (no token refresh) for whether the user has connected Google Calendar.
+export async function hasCalendarConnection(client, userId) {
+  if (!savedCalendarConfigured()) {
+    const { data: { session } } = await client.auth.getSession();
+    return Boolean(session?.provider_token);
+  }
+  const { data, error } = await client.from('google_calendar_connections')
+    .select('user_id').eq('user_id', userId).maybeSingle();
+  return error ? null : Boolean(data);
+}
+
 export async function getCalendarAccess(client, userId) {
   if (!savedCalendarConfigured()) {
     const { data: { session } } = await client.auth.getSession();

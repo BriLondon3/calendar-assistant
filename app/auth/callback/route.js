@@ -23,13 +23,15 @@ export async function GET(request) {
       const jar = await cookies();
       const destination = jar.get('oauth-destination')?.value;
       jar.delete('oauth-destination');
-      if (destination === 'calendar') {
+      const calendarConnect = destination === 'calendar' || destination === 'calendar-upload';
+      if (calendarConnect) {
         try {
           await saveCalendarConnection(client, data.session);
         } catch {
           redirect('/account?calendar=save-failed');
         }
       }
+      if (destination === 'calendar-upload') redirect('/upload?calendar=connected');
       redirect(destination === 'calendar' ? '/calendar' : '/upload');
     }
     console.error('Google sign-in session exchange failed', {

@@ -4,7 +4,7 @@ import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { authConfigured, createWritableAuthClient } from '../auth-client';
 
-async function startGoogleSignIn(calendarAccess = false) {
+async function startGoogleSignIn(calendarAccess = false, returnTo = 'calendar') {
   const origin = (await headers()).get('origin');
   const localOrigins = ['http://127.0.0.1:3000', 'http://localhost:3000'];
   const configuredOrigin = process.env.SITE_URL || (process.env.VERCEL_PROJECT_PRODUCTION_URL
@@ -19,7 +19,9 @@ async function startGoogleSignIn(calendarAccess = false) {
 
   const client = await createWritableAuthClient();
   const jar = await cookies();
-  jar.set('oauth-destination', calendarAccess ? 'calendar' : 'upload', {
+  // Where to land after Google: calendar connections made during setup return to /upload.
+  const destination = calendarAccess ? (returnTo === 'upload' ? 'calendar-upload' : 'calendar') : 'upload';
+  jar.set('oauth-destination', destination, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
@@ -51,6 +53,16 @@ export async function connectGoogleCalendar() {
   const { data: { user } } = await client.auth.getUser();
   if (!user) redirect('/signup?mode=login');
   await startGoogleSignIn(true);
+}
+
+// Same as connectGoogleCalendar, but brings the user back to the upload page
+// (used by the first-run "connect your calendar" step).
+export async function connectCalendarDuringSetup() {
+  if (!authConfigured()) redirect('/signup');
+  const client = await createWritableAuthClient();
+  const { data: { user } } = await client.auth.getUser();
+  if (!user) redirect('/signup?mode=login');
+  await startGoogleSignIn(true, 'upload');
 }
 
 export async function disconnectGoogleCalendar() {
