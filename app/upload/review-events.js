@@ -24,7 +24,7 @@ export function groupEventsByDay(events) {
 export function proposedEventsForDay(events, date, timeZone) {
   if (!date) return [];
   return events.flatMap(draft => {
-    if (draft.added || !draft.date || draft.date > date || (draft.endDate || draft.date) < date) return [];
+    if (draft.added || draft.skipped || !draft.date || draft.date > date || (draft.endDate || draft.date) < date) return [];
     const { event } = prepareCalendarEvent({ ...draft, timeZone });
     if (!event || event.end.dateTime === `${date}T00:00:00`) return [];
     return [{ ...event, proposed: true }];

@@ -1,6 +1,7 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { authConfigured, createWritableAuthClient } from '../../auth-client';
 import { eventFingerprint } from '../../upload/review-events';
+import { validColorId } from '../../calendar/google-colors';
 
 function json(body, status = 200) {
   return Response.json(body, { status, headers: { 'Cache-Control': 'private, no-store' } });
@@ -41,6 +42,8 @@ function details(value) {
     endTime: time('endTime'), allDay: value?.allDay === true,
     location: string('location', 1000), description: string('description', 5000),
     notes: Array.isArray(value?.notes) ? value.notes.filter(note => typeof note === 'string').slice(0, 12).map(note => note.slice(0, 1000)) : [],
+    // Chosen Google Calendar color, and whether the user skipped it (skips can be undone).
+    colorId: validColorId(value?.colorId), skipped: value?.skipped === true,
   };
 }
 

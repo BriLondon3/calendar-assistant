@@ -1,3 +1,5 @@
+import { validColorId } from './google-colors.js';
+
 function validDate(value) {
   return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)
     && Number.isFinite(Date.parse(value)) && new Date(value).toISOString().slice(0, 10) === value;
@@ -23,6 +25,7 @@ export function prepareCalendarEvent(draft) {
     summary,
     location: typeof draft.location === 'string' ? draft.location.trim().slice(0, 1000) : '',
     description: typeof draft.description === 'string' ? draft.description.trim().slice(0, 5000) : '',
+    ...(validColorId(draft.colorId) && { colorId: validColorId(draft.colorId) }),
   };
   if (draft.allDay === true) {
     const exclusiveEnd = new Date(`${lastDate}T00:00:00Z`);

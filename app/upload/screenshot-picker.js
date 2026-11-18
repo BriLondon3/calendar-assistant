@@ -191,6 +191,7 @@ export default function ScreenshotPicker() {
 
   const ready = screenshots.filter(image => image.status !== 'done' && image.status !== 'reading').length;
   const current = reviewing ? 1 : 0;
+  const waiting = events.filter(event => !event.added && !event.skipped).length;
 
   return (
     <div>
@@ -205,12 +206,15 @@ export default function ScreenshotPicker() {
       {error && <p className="auth-error upload-alert" role="alert">{error}</p>}
       {syncError && <p className="upload-alert" role="status">{syncError} <button className="text-button" type="button" onClick={refreshQueue}>Retry sync</button></p>}
       <section hidden={reviewing} aria-labelledby="upload-heading">
-        {events.length > 0 && (
+        {waiting > 0 && (
           <button className="review-waiting" type="button" disabled={busy} onClick={() => setReviewOpen(true)}>
-            <span className="review-waiting-count">{events.length}</span>
-            <span className="review-waiting-copy"><strong>{events.length === 1 ? '1 event is' : `${events.length} events are`} waiting for review</strong>Check them against your calendar and add the ones you want.</span>
+            <span className="review-waiting-count">{waiting}</span>
+            <span className="review-waiting-copy"><strong>{waiting === 1 ? '1 event is' : `${waiting} events are`} waiting for review</strong>Check them against your calendar and add the ones you want.</span>
             <span className="review-waiting-go" aria-hidden="true">Review →</span>
           </button>
+        )}
+        {waiting === 0 && events.length > 0 && (
+          <p className="review-revisit"><button className="text-button" type="button" disabled={busy} onClick={() => setReviewOpen(true)}>Open your review list</button> to see added or skipped events.</p>
         )}
         <div className="upload-intro">
           <div>

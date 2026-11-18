@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { layoutDayEvents, readableTextColor } from './day-layout';
 import { isBookedAndBusyEvent } from './event-insert';
+import { googleColor } from './google-colors';
 
 function localDateString(date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
@@ -146,7 +147,11 @@ function DayTimeline({ events, previews, date, timeZone, timelineRef, onRemove, 
   useEffect(() => { setSelectedId(null); }, [date]);
 
   function colorStyle(event) {
-    if (event.proposed) return {};
+    if (event.proposed) {
+      // Tint the dashed preview with the color picked during review.
+      const picked = googleColor(event.colorId);
+      return picked ? { borderColor: picked.hex, backgroundColor: `${picked.hex}26`, color: '#172536' } : {};
+    }
     return { backgroundColor: event.backgroundColor || '#039be5', color: readableTextColor(event.backgroundColor) };
   }
 

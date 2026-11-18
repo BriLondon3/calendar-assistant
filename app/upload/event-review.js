@@ -5,6 +5,7 @@ import Link from 'next/link';
 import CalendarDay from '../calendar/calendar-day';
 import { prepareCalendarEvent } from '../calendar/event-insert';
 import { groupEventsByDay, proposedEventsForDay } from './review-events';
+import { GOOGLE_EVENT_COLORS, googleColor } from '../calendar/google-colors';
 
 function formatDate(date) {
   return new Date(`${date}T12:00:00`).toLocaleDateString(undefined, {
@@ -44,21 +45,49 @@ function EventEditor({ event, onSave, onCancel }) {
   );
 }
 
+function ColorPicker({ value, disabled, title, onPick }) {
+  return (
+    <div className="color-picker" role="radiogroup" aria-label={`Google Calendar color for ${title || 'this event'}`}>
+      <button type="button" role="radio" aria-checked={!value} className="color-dot color-dot-default" title="Calendar default" aria-label="Calendar default color" disabled={disabled} onClick={() => onPick(null)} />
+      {GOOGLE_EVENT_COLORS.map(color => (
+        <button key={color.id} type="button" role="radio" aria-checked={value === color.id} className="color-dot" title={color.name} aria-label={color.name} style={{ '--dot': color.hex }} disabled={disabled} onClick={() => onPick(color.id)} />
+      ))}
+    </div>
+  );
+}
+
 export default function EventReview({ events, onChange, onReject, onUploadMore }) {
   const [selectedId, setSelectedId] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [addingId, setAddingId] = useState(null);
   const [feedback, setFeedback] = useState(null);
   const [calendarVersion, setCalendarVersion] = useState(0);
+  const [pendingColors, setPendingColors] = useState({});
+  const [undoId, setUndoId] = useState(null);
+  const [showSkipped, setShowSkipped] = useState(false);
   const saving = useRef(false);
   const heading = useRef(null);
-  const selected = events.find(event => event.id === selectedId) || events[0];
   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+  // Colors show instantly while they save in the background.
+  const colorOf = event => Object.hasOwn(pendingColors, event.queueId) ? pendingColors[event.queueId] : event.colorId || null;
+  const withColors = events.map(event => ({ ...event, colorId: colorOf(event) }));
+  const active = withColors.filter(event => !event.skipped);
+  const skipped = withColors.filter(event => event.skipped);
+  const selected = active.find(event => event.id === selectedId) || active[0];
+  const undoEvent = undoId && skipped.find(event => event.queueId === undoId);
+  const busy = Boolean(addingId) || Object.keys(pendingColors).length > 0;
 
   useEffect(() => {
     heading.current?.focus({ preventScroll: true });
     window.scrollTo(0, 0);
   }, []);
+
+  useEffect(() => {
+    if (!undoId) return;
+    const timer = setTimeout(() => setUndoId(null), 8000);
+    return () => clearTimeout(timer);
+  }, [undoId]);
 
   async function updateCalendar(event, remove = false) {
     if (saving.current) return;
@@ -119,29 +148,108 @@ export default function EventReview({ events, onChange, onReject, onUploadMore }
     }
   }
 
-  const previews = proposedEventsForDay(events, selected.date, timeZone);
-  const focusedPreview = selected.added ? null : prepareCalendarEvent({ ...selected, timeZone }).event?.id;
+  async function pickColor(event, colorId) {
+    if (saving.current || (event.colorId || null) === colorId) return;
+    saving.current = true;
+    setSelectedId(event.id);
+    setFeedback(null);
+    setPendingColors(current => ({ ...current, [event.queueId]: colorId }));
+    try {
+      await onChange(event, { colorId });
+    } catch (error) {
+      setFeedback({ id: event.id, message: `Couldn’t save that color. ${error.message}` });
+    } finally {
+      saving.current = false;
+      setPendingColors(current => {
+        const next = { ...current };
+        delete next[event.queueId];
+        return next;
+      });
+    }
+  }
+
+  // Skipping hides the event instead of deleting it, so a misclick can be undone.
+  async function skipEvent(event) {
+    if (saving.current) return;
+    saving.current = true;
+    setAddingId(event.id);
+    setFeedback(null);
+    try {
+      await onChange(event, { skipped: true });
+      setUndoId(event.queueId);
+    } catch (error) {
+      setFeedback({ id: event.id, message: error.message });
+    } finally {
+      saving.current = false;
+      setAddingId(null);
+    }
+  }
+
+  async function restoreEvent(event) {
+    if (saving.current) return;
+    saving.current = true;
+    setAddingId(event.id);
+    try {
+      const updated = await onChange(event, { skipped: false });
+      setUndoId(null);
+      if (updated) setSelectedId(updated.id);
+    } catch (error) {
+      setFeedback({ id: event.id, message: error.message });
+    } finally {
+      saving.current = false;
+      setAddingId(null);
+    }
+  }
+
+  async function clearSkipped() {
+    if (saving.current) return;
+    saving.current = true;
+    setAddingId('clearing');
+    try {
+      for (const event of skipped) await onReject(event);
+      setUndoId(null);
+      setShowSkipped(false);
+    } catch (error) {
+      setFeedback({ id: 'skipped', message: error.message });
+    } finally {
+      saving.current = false;
+      setAddingId(null);
+    }
+  }
+
+  const previews = selected ? proposedEventsForDay(withColors, selected.date, timeZone) : [];
+  const focusedPreview = selected && !selected.added ? prepareCalendarEvent({ ...selected, timeZone }).event?.id : null;
 
   return (
     <section className="event-review" aria-labelledby="review-heading">
       <div className="review-heading-row">
         <h1 ref={heading} id="review-heading" tabIndex={-1}>Review events</h1>
-        <button className="text-button" type="button" disabled={Boolean(addingId)} onClick={onUploadMore}>Upload more screenshots</button>
+        <button className="text-button" type="button" disabled={busy} onClick={onUploadMore}>Upload more screenshots</button>
       </div>
       <div className="review-layout">
         <div className="review-list" aria-label="Extracted events">
-          {groupEventsByDay(events).map(([date, dayEvents]) => (
+          {active.length === 0 && (
+            <div className="review-done">
+              <span aria-hidden="true">🎉</span>
+              <p><strong>All caught up.</strong> Nothing left to review.</p>
+              <button className="primary-button" type="button" onClick={onUploadMore}>Upload more screenshots</button>
+            </div>
+          )}
+          {groupEventsByDay(active).map(([date, dayEvents]) => (
             <section key={date} className="review-day-group">
               <h3 className="review-day-divider">{date ? new Date(`${date}T12:00:00`).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' }) : 'Date to confirm'}</h3>
               <ul className="review-list">
-                {dayEvents.map(event => (
+                {dayEvents.map(event => {
+                  const color = googleColor(event.colorId);
+                  return (
                   <li key={event.id}>
-                    <article className="review-card" data-selected={selected.id === event.id}>
+                    <article className="review-card" data-selected={selected?.id === event.id} data-has-picker={!event.added} style={color ? { '--event-color': color.hex } : undefined}>
+                      <div className="review-card-main">
                       <div className="review-card-heading">
-                        <button className="review-event-title" type="button" aria-pressed={selected.id === event.id} onClick={() => setSelectedId(event.id)}>
+                        <button className="review-event-title" type="button" aria-pressed={selected?.id === event.id} onClick={() => setSelectedId(event.id)}>
                           {event.title || 'Untitled event'}
                         </button>
-                        {!event.added && <button className="review-edit-button" type="button" aria-label={`Edit ${event.title || 'event'}`} title="Edit event" disabled={Boolean(addingId)} onClick={() => { setSelectedId(event.id); setEditingId(event.id); setFeedback(null); }}><span aria-hidden="true">✎</span></button>}
+                        {!event.added && <button className="review-edit-button" type="button" aria-label={`Edit ${event.title || 'event'}`} title="Edit event" disabled={busy} onClick={() => { setSelectedId(event.id); setEditingId(event.id); setFeedback(null); }}><span aria-hidden="true">✎</span></button>}
                       </div>
                       <div className="review-event-meta"><p className="review-date">
                         {event.date ? formatDate(event.date) : 'Date to confirm'}
@@ -150,31 +258,62 @@ export default function EventReview({ events, onChange, onReject, onUploadMore }
                       <p className="review-date">{event.allDay ? 'All day' : event.startTime ? `${formatTime(event.startTime)}${event.endTime ? ` – ${formatTime(event.endTime)}` : ' · End time to confirm'}` : 'Time to confirm'}</p>
                       {event.location && <p className="review-date">{event.location}</p>}
                       </div>
+                      {!event.added && <p className="review-color-label">{color ? <><i style={{ background: color.hex }} />{color.name}</> : 'Calendar default color'}</p>}
                       {event.description && <p className="review-description">{event.description}</p>}
                       {event.notes.length > 0 && !event.added && <details className="review-notes"><summary>Extraction notes</summary><ul>{event.notes.map((note, index) => <li key={index}>{note}</li>)}</ul></details>}
                       {feedback?.id === event.id && <p role="alert" className="review-warning">{feedback.message} {feedback.reconnect && <Link href="/account">Manage Calendar connection</Link>}</p>}
-                      {event.added ? <div className="review-actions"><p className="review-added" role="status">Added to Google Calendar</p><button className="review-skip-button" type="button" disabled={Boolean(addingId)} onClick={() => updateCalendar(event, true)}>{addingId === event.id ? 'Removing…' : 'Remove from calendar'}</button></div> : editingId === event.id ? (
+                      {event.added ? <div className="review-actions"><p className="review-added" role="status">{color && <i className="review-added-dot" style={{ background: color.hex }} />}Added to Google Calendar</p><button className="review-skip-button" type="button" disabled={busy} onClick={() => updateCalendar(event, true)}>{addingId === event.id ? 'Removing…' : 'Remove from calendar'}</button></div> : editingId === event.id ? (
                         <EventEditor key={`${event.id}:${event.version}`} event={event} onCancel={() => setEditingId(null)} onSave={draft => saveReviewChange(event, draft)} />
                       ) : (
                         <div className="review-actions">
-                          <button className="primary-button" type="button" disabled={Boolean(addingId)} onClick={() => updateCalendar(event)}>{addingId === event.id ? 'Adding…' : 'Add to calendar'}</button>
-                          <button className="review-skip-button" type="button" disabled={Boolean(addingId)} onClick={() => saveReviewChange(event)}>Skip this</button>
+                          <button className="primary-button" type="button" disabled={busy} onClick={() => updateCalendar(event)}>{addingId === event.id ? 'Adding…' : 'Add to calendar'}</button>
+                          <button className="review-skip-button" type="button" disabled={busy} onClick={() => skipEvent(event)}>Skip this</button>
                         </div>
                       )}
+                      </div>
+                      {!event.added && <ColorPicker value={event.colorId} title={event.title} disabled={busy} onPick={colorId => pickColor(event, colorId)} />}
                     </article>
                   </li>
-                ))}
+                  );
+                })}
               </ul>
             </section>
           ))}
+
+          {skipped.length > 0 && (
+            <section className="review-skipped" aria-labelledby="skipped-heading">
+              <button className="review-skipped-toggle" type="button" aria-expanded={showSkipped} onClick={() => setShowSkipped(open => !open)}>
+                <span id="skipped-heading">Skipped ({skipped.length})</span><span aria-hidden="true">{showSkipped ? '▴' : '▾'}</span>
+              </button>
+              {showSkipped && <>
+                <ul>
+                  {skipped.map(event => (
+                    <li key={event.id}>
+                      <div><strong>{event.title || 'Untitled event'}</strong><span>{event.date ? formatDate(event.date) : 'Date to confirm'}{event.startTime && !event.allDay ? ` · ${formatTime(event.startTime)}` : ''}</span></div>
+                      <button className="text-button" type="button" disabled={busy} onClick={() => restoreEvent(event)}>{addingId === event.id ? 'Restoring…' : 'Restore'}</button>
+                    </li>
+                  ))}
+                </ul>
+                {feedback?.id === 'skipped' && <p role="alert" className="review-warning">{feedback.message}</p>}
+                <button className="review-clear-skipped" type="button" disabled={busy} onClick={clearSkipped}>{addingId === 'clearing' ? 'Clearing…' : 'Clear skipped for good'}</button>
+              </>}
+            </section>
+          )}
         </div>
         <aside className="review-calendar" aria-label="Calendar for the selected event">
           <h3>Your calendar</h3>
-          {selected.date
+          {selected?.date
             ? <CalendarDay key={`${selected.date}:${calendarVersion}`} initialDate={selected.date} fixedDate previews={previews} focusedPreview={focusedPreview} />
-            : <p>Add a date to the selected event to see that day’s calendar.</p>}
+            : <p>{selected ? 'Add a date to the selected event to see that day’s calendar.' : 'Pick an event to see that day’s calendar.'}</p>}
         </aside>
       </div>
+
+      {undoEvent && (
+        <div className="undo-toast" role="status">
+          <span>Skipped “{undoEvent.title || 'Untitled event'}”</span>
+          <button type="button" disabled={busy} onClick={() => restoreEvent(undoEvent)}>Undo</button>
+        </div>
+      )}
     </section>
   );
 }
