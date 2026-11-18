@@ -21,6 +21,7 @@ export default function ScreenshotPicker() {
   const [screenshots, setScreenshots] = useState([]);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [dragging, setDragging] = useState(false);
   const [events, setEvents] = useState([]);
   const [reviewOpen, setReviewOpen] = useState(false);
   const reviewing = reviewOpen && events.length > 0;
@@ -151,6 +152,7 @@ export default function ScreenshotPicker() {
     for (const [index, image] of pending.entries()) {
       if (!mounted.current) break;
       setProgress(`Reading screenshot ${index + 1} of ${pending.length}…`);
+      setScreenshots(current => current.map(item => item.id === image.id ? { ...item, status: 'reading' } : item));
       const form = new FormData();
       form.set('screenshot', image.file);
       form.set('timeZone', Intl.DateTimeFormat().resolvedOptions().timeZone);
@@ -173,6 +175,7 @@ export default function ScreenshotPicker() {
         setScreenshots(current => current.map(item => item.id === image.id ? { ...item, status: 'done', count: suggestions.length } : item));
       } catch (error) {
         if (controller.signal.aborted) break;
+        setScreenshots(current => current.map(item => item.id === image.id ? { ...item, status: 'failed' } : item));
         failures.push(`${image.name}: ${error.message}`);
       }
     }
@@ -186,26 +189,55 @@ export default function ScreenshotPicker() {
     }
   }
 
+  const ready = screenshots.filter(image => image.status !== 'done' && image.status !== 'reading').length;
+  const current = reviewing ? 1 : 0;
+
   return (
     <div>
       <ol className="workflow" aria-label="Event workflow">
-        <li aria-current={reviewing ? undefined : 'step'}><span>1</span>Upload screenshots</li>
-        <li aria-current={reviewing ? 'step' : undefined}><span>2</span>Review events</li>
-        <li><span>3</span>Add your plans</li>
+        {['Upload screenshots', 'Review events', 'Add your plans'].map((label, index) => (
+          <li key={label} aria-current={index === current ? 'step' : undefined} data-done={index < current}>
+            <span>{index < current ? '✓' : index + 1}</span>{label}
+          </li>
+        ))}
       </ol>
       {reviewing && <EventReview events={events} onUploadMore={() => setReviewOpen(false)} onChange={changeEvent} onReject={changeEvent} />}
-      {error && <p className="auth-error" role="alert">{error}</p>}
-      {syncError && <p role="status">{syncError} <button className="text-button" type="button" onClick={refreshQueue}>Retry sync</button></p>}
+      {error && <p className="auth-error upload-alert" role="alert">{error}</p>}
+      {syncError && <p className="upload-alert" role="status">{syncError} <button className="text-button" type="button" onClick={refreshQueue}>Retry sync</button></p>}
       <section hidden={reviewing} aria-labelledby="upload-heading">
-        <h1 id="upload-heading">Start with a screenshot.</h1>
-        <p className="upload-description">Choose screenshots from group chats, flyers, or invites. Make sure the event name, date, time, and location are visible.</p>
-        <div className="upload-dropzone" onDragOver={event => event.preventDefault()} onDrop={event => {
-          event.preventDefault();
-          addFiles(Array.from(event.dataTransfer.files));
-        }}>
-          <span className="upload-symbol" aria-hidden="true">↑</span>
-          <h2>Drop your screenshots here</h2>
-          <p>or choose images from your device</p>
+        {events.length > 0 && (
+          <button className="review-waiting" type="button" disabled={busy} onClick={() => setReviewOpen(true)}>
+            <span className="review-waiting-count">{events.length}</span>
+            <span className="review-waiting-copy"><strong>{events.length === 1 ? '1 event is' : `${events.length} events are`} waiting for review</strong>Check them against your calendar and add the ones you want.</span>
+            <span className="review-waiting-go" aria-hidden="true">Review →</span>
+          </button>
+        )}
+        <div className="upload-intro">
+          <div>
+            <p className="upload-eyebrow">STEP 1 · UPLOAD</p>
+            <h1 id="upload-heading">Start with a screenshot.</h1>
+            <p className="upload-description">Group chats, invites, emails, flyers: if it has an event on it, drop it in. We’ll pull out the name, date, time, and place.</p>
+          </div>
+          <ul className="upload-sources" aria-label="Works with">
+            {['GroupMe', 'Flare', 'Texts', 'Email', 'Flyers', 'Instagram'].map(source => <li key={source}>{source}</li>)}
+          </ul>
+        </div>
+        <div className="upload-dropzone" data-dragging={dragging}
+          onDragOver={event => { event.preventDefault(); setDragging(true); }}
+          onDragLeave={event => { if (!event.currentTarget.contains(event.relatedTarget)) setDragging(false); }}
+          onDrop={event => {
+            event.preventDefault();
+            setDragging(false);
+            addFiles(Array.from(event.dataTransfer.files));
+          }}>
+          <div className="upload-art" aria-hidden="true">
+            <span className="upload-art-card a"><i /><i /></span>
+            <span className="upload-art-card b"><i /><i /></span>
+            <span className="upload-art-card c"><i /><i /></span>
+            <span className="upload-art-arrow">↑</span>
+          </div>
+          <h2>{dragging ? 'Drop them here!' : 'Drop your screenshots here'}</h2>
+          <p className="upload-dropzone-sub"><span className="upload-desktop-only">or choose them from your computer</span><span className="upload-mobile-only">Pick them straight from your camera roll</span></p>
           <label className="primary-button file-picker">
             Choose screenshots
             <input type="file" accept="image/png,image/jpeg,image/webp" multiple disabled={busy} onChange={event => {
@@ -215,19 +247,36 @@ export default function ScreenshotPicker() {
           </label>
           <p className="upload-limits">PNG, JPG, or WebP · Up to 10 images · 3 MB each</p>
         </div>
-        <p className="upload-note">Extract events sends your screenshots to Google Gemini. Extracted events sync to your account so you can review them on another device.</p>
-        {screenshots.some(image => image.status !== 'done') && <button className="primary-button" type="button" disabled={busy} onClick={extractEvents}>{busy ? 'Working…' : 'Extract events'}</button>}
-        {events.length > 0 && <button className="primary-button" type="button" disabled={busy} onClick={() => setReviewOpen(true)}>Review events ({events.length})</button>}
-        <p role="status">{progress}</p>
-        <p aria-live="polite">{screenshots.length > 0 && `${screenshots.length} screenshot${screenshots.length === 1 ? '' : 's'} selected`}</p>
-        <ul className="screenshot-grid">
-          {screenshots.map(image => (
-            <li key={image.id}>
-              <a href={image.url} target="_blank" rel="noreferrer" aria-label={`Open full preview of ${image.name}`}><img src={image.url} alt={`Screenshot preview of ${image.name}`} /></a>
-              <div><span>{image.name}</span>{image.status === 'done' && <span>{image.count === 0 ? 'No events found. Try a clearer screenshot if details were missed.' : `${image.count} event suggestion(s) found`}</span>}<button type="button" disabled={busy} onClick={() => removeScreenshot(image.id)} aria-label={`Remove ${image.name}`}>Remove</button></div>
-            </li>
-          ))}
+        <ul className="upload-tips" aria-label="Tips for better results">
+          <li><span aria-hidden="true">🗓️</span><div><strong>Show the date and time</strong>Crop so the important details are visible.</div></li>
+          <li><span aria-hidden="true">📍</span><div><strong>Include the location</strong>We’ll add it to the event for you.</div></li>
+          <li><span aria-hidden="true">📱</span><div><strong>Upload on your phone</strong>Then review on your laptop. It all syncs.</div></li>
         </ul>
+        {screenshots.length > 0 && (
+          <ul className="screenshot-grid">
+            {screenshots.map(image => (
+              <li key={image.id} data-status={image.status}>
+                <a href={image.url} target="_blank" rel="noreferrer" aria-label={`Open full preview of ${image.name}`}><img src={image.url} alt={`Screenshot preview of ${image.name}`} /></a>
+                <span className="shot-badge">
+                  {image.status === 'reading' ? 'Reading…' : image.status === 'failed' ? 'Try again' : image.status === 'done' ? (image.count === 0 ? 'No events found' : `✓ ${image.count} event${image.count === 1 ? '' : 's'}`) : 'Ready'}
+                </span>
+                <div>
+                  <span className="shot-name">{image.name}</span>
+                  {image.status === 'done' && image.count === 0 && <span className="shot-hint">Try a clearer screenshot if details were missed.</span>}
+                  <button type="button" disabled={busy} onClick={() => removeScreenshot(image.id)} aria-label={`Remove ${image.name}`}>Remove</button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+        <p className="upload-note"><span aria-hidden="true">🔒</span> Extracting events sends your screenshots to Google Gemini to read them. Extracted events sync to your account so you can review them on another device.</p>
+        {(ready > 0 || busy || progress) && (
+          <div className="upload-actionbar">
+            <p role="status">{progress || (ready > 0 ? `${ready} screenshot${ready === 1 ? '' : 's'} ready` : '')}</p>
+            {ready > 0 && <button className="primary-button" type="button" disabled={busy} onClick={extractEvents}>{busy ? 'Working…' : `Extract events from ${ready}`}</button>}
+          </div>
+        )}
+        <p className="visually-hidden" aria-live="polite">{screenshots.length > 0 && `${screenshots.length} screenshot${screenshots.length === 1 ? '' : 's'} selected`}</p>
       </section>
     </div>
   );

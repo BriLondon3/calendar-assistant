@@ -70,18 +70,49 @@ export default function CalendarDay({ initialDate, fixedDate = false, previews =
     return () => controller.abort();
   }, [date]);
 
+  const today = localDateString(new Date());
+  const isToday = date === today;
+  function shiftDay(days) {
+    const next = new Date(`${date}T12:00:00`);
+    next.setDate(next.getDate() + days);
+    setDate(localDateString(next));
+  }
+  const events = result?.events || [];
+  const addedByUs = events.filter(event => isBookedAndBusyEvent(event.id)).length;
+
   return (
     <div className="calendar-day" aria-busy={loading}>
-      {!fixedDate && <>
-        <label htmlFor="calendar-date">Choose a day</label>
-        <input id="calendar-date" type="date" value={date} onChange={event => setDate(event.target.value)} />
-      </>}
+      {!fixedDate && (
+        <div className="day-nav">
+          <div className="day-nav-buttons">
+            <button type="button" className="day-nav-arrow" aria-label="Previous day" onClick={() => shiftDay(-1)} disabled={!date}>←</button>
+            <button type="button" className="day-nav-today" onClick={() => setDate(today)} disabled={isToday}>Today</button>
+            <button type="button" className="day-nav-arrow" aria-label="Next day" onClick={() => shiftDay(1)} disabled={!date}>→</button>
+          </div>
+          <label className="day-nav-pick" htmlFor="calendar-date"><span>Jump to</span>
+            <input id="calendar-date" type="date" value={date} onChange={event => event.target.value && setDate(event.target.value)} />
+          </label>
+        </div>
+      )}
+      {!fixedDate && result?.events && (
+        <p className="day-summary">
+          <strong>{events.length === 0 ? 'Nothing planned' : `${events.length} event${events.length === 1 ? '' : 's'}`}</strong>
+          {isToday ? ' today' : ''}
+          {addedByUs > 0 && <span className="day-summary-chip">✳ {addedByUs} added with Booked and Busy</span>}
+        </p>
+      )}
       <p className="calendar-timezone">Times shown in {timeZone || 'your local time zone'}. Primary calendar.</p>
       <div aria-live="polite">
-        {loading && <p>Loading your calendar…</p>}
-        {result?.error && <p role="status">{result.error}</p>}
-        {result?.events?.length === 0 && previews.length === 0 && <p>No events on this day.</p>}
-        {result && (result.events || previews.length > 0) && <DayTimeline events={result.events || []} previews={previews} date={date} timeZone={timeZone} timelineRef={timeline}
+        {loading && <div className="day-loading"><span className="google-spinner" aria-hidden="true" />Loading your calendar…</div>}
+        {result?.error && <p role="status" className="day-error">{result.error} {result.reconnect && <Link href="/account">Connect Google Calendar</Link>}</p>}
+        {result?.events?.length === 0 && previews.length === 0 && (fixedDate ? <p>No events on this day.</p> : (
+          <div className="day-empty">
+            <span aria-hidden="true">🌤️</span>
+            <p><strong>A free day.</strong> Enjoy it, or fill it up with that flyer you screenshotted.</p>
+            <Link className="primary-button" href="/upload">Upload screenshots</Link>
+          </div>
+        ))}
+        {result && (result.events || previews.length > 0) && <DayTimeline events={result.events || []} previews={previews} date={date} timeZone={timeZone} timelineRef={timeline} isToday={isToday}
           onRemove={fixedDate ? undefined : id => setResult(current => current?.events ? { ...current, events: current.events.filter(event => event.id !== id) } : current)} />}
         {result?.calendarColorAvailable === false && result?.events && <p className="calendar-timezone">Event colors are shown where available. <Link href="/account">Reconnect Calendar</Link> to also use your calendar’s default color.</p>}
         {result?.customColorsAvailable === false && result?.events && <p className="calendar-timezone"><Link href="/account">Reconnect Calendar</Link> to use your custom Google event colors.</p>}
@@ -90,7 +121,19 @@ export default function CalendarDay({ initialDate, fixedDate = false, previews =
   );
 }
 
-function DayTimeline({ events, previews, date, timeZone, timelineRef, onRemove }) {
+function NowLine() {
+  const [minute, setMinute] = useState(null);
+  useEffect(() => {
+    const update = () => { const now = new Date(); setMinute(now.getHours() * 60 + now.getMinutes()); };
+    update();
+    const timer = setInterval(update, 60000);
+    return () => clearInterval(timer);
+  }, []);
+  if (minute === null) return null;
+  return <div className="now-line" style={{ top: minute / 60 * 64 }} aria-hidden="true" />;
+}
+
+function DayTimeline({ events, previews, date, timeZone, timelineRef, onRemove, isToday }) {
   const savedIds = new Set(events.map(event => event.id));
   const entries = [...events, ...previews.filter(event => !savedIds.has(event.id))];
   const timed = layoutDayEvents(entries, date);
@@ -135,13 +178,14 @@ function DayTimeline({ events, previews, date, timeZone, timelineRef, onRemove }
 
   return (
     <div className="day-view">
-      <div className="day-view-heading">{new Date(`${date}T12:00:00`).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</div>
+      <div className="day-view-heading">{new Date(`${date}T12:00:00`).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}{isToday && <span className="today-badge">Today</span>}</div>
       {allDay.length > 0 && <div className="all-day-row"><span>All day</span><div>{allDay.map(event => <button key={event.id} className={event.proposed ? 'proposed-event' : undefined} type="button" onClick={() => selectEvent(event)} style={colorStyle(event)}>{event.proposed && 'Proposed · '}{event.summary || 'Untitled event'}</button>)}</div></div>}
       <div className="day-scroll" ref={timelineRef} tabIndex={0} role="region" aria-label="Scrollable 24-hour day calendar">
         <div className="hour-labels" aria-hidden="true">
           {Array.from({ length: 24 }, (_, hour) => <span key={hour} style={{ top: hour * 64 }}>{hour === 0 ? '12 AM' : hour < 12 ? `${hour} AM` : hour === 12 ? '12 PM' : `${hour - 12} PM`}</span>)}
         </div>
         <div className="day-grid">
+          {isToday && <NowLine />}
           {timed.map(event => <button
             type="button"
             className={event.proposed ? 'timed-event proposed-event' : 'timed-event'}

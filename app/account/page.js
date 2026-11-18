@@ -1,9 +1,12 @@
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { createAuthClient, getCurrentUser } from '../auth-client';
 import { connectGoogleCalendar, disconnectGoogleCalendar, logout } from '../signup/actions';
-import { savedCalendarConfigured } from '../calendar-connection';
+import { savedCalendarConfigured, hasCalendarConnection } from '../calendar-connection';
 import SiteHeader from '../components/site-header';
+import ProfilePhoto from '../components/profile-photo';
+import GoogleButton from '../signup/google-button';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,36 +14,72 @@ export default async function AccountPage({ searchParams }) {
   const user = await getCurrentUser();
   if (!user) redirect('/signup?mode=login');
   const query = await searchParams;
-  let savedConnection = false;
-  if (savedCalendarConfigured()) {
-    const jar = await cookies();
-    const client = createAuthClient({ getAll: () => jar.getAll(), setAll: () => {} });
-    const { data } = await client.from('google_calendar_connections').select('user_id').eq('user_id', user.id).maybeSingle();
-    savedConnection = Boolean(data);
-  }
+  const jar = await cookies();
+  const client = createAuthClient({ getAll: () => jar.getAll(), setAll: () => {} });
+  const connected = await hasCalendarConnection(client, user.id) === true;
+  // Disconnecting only applies to saved (encrypted) connections.
+  const savedConnection = savedCalendarConfigured() && connected;
+  const name = user.user_metadata?.full_name || user.email;
+  const since = user.created_at && new Date(user.created_at).toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
 
   return (
     <div className="workspace">
       <SiteHeader user={user} active="account" />
       <main className="account-page">
-        <section className="auth-card account-card" aria-labelledby="account-heading">
-          <h1 id="account-heading">Your account</h1>
-          <p>Signed in as <strong>{user.email}</strong>.</p>
-          <p>Monthly plan · <strong>$2.99/month</strong></p>
-          <p>Subscriptions are coming soon. You haven’t been charged.</p>
-          {query.logout === 'failed' && <p role="alert" className="auth-error">Couldn’t sign out. Try again.</p>}
-          <form action={logout}><button className="primary-button" type="submit">Sign out</button></form>
-          <section className="calendar-section" aria-labelledby="connection-heading">
-            <h2 id="connection-heading">Google Calendar connection</h2>
-            <p>{savedConnection ? 'Your calendar connection is saved.' : 'Connect your Google account to view your calendar.'}</p>
-            {query.calendar === 'save-failed' && <p role="alert" className="auth-error">Your calendar connection couldn’t be saved. Please check the connection setup and try again.</p>}
-            {query.calendar === 'disconnect-failed' && <p role="alert" className="auth-error">Couldn’t disconnect your calendar. Please try again.</p>}
-            <form action={connectGoogleCalendar}>
-              <button className={savedConnection ? 'text-button' : 'primary-button'} type="submit">{savedConnection ? 'Reconnect or change Google account' : 'Connect Google Calendar'}</button>
-            </form>
-            {savedConnection && <form action={disconnectGoogleCalendar}><button className="text-button" type="submit">Disconnect calendar</button></form>}
-          </section>
+        <section className="profile-card" aria-labelledby="account-heading">
+          <div className="profile-photo-lg"><ProfilePhoto src={user.user_metadata?.avatar_url} name={name} /></div>
+          <div className="profile-copy">
+            <p className="upload-eyebrow">YOUR ACCOUNT</p>
+            <h1 id="account-heading">{user.user_metadata?.full_name ? `Hey, ${user.user_metadata.full_name.split(' ')[0]}!` : 'Your account'}</h1>
+            <p>Signed in as <strong>{user.email}</strong>{since && <> · Member since {since}</>}</p>
+          </div>
+          <form action={logout} className="profile-signout">
+            <button className="ghost-button" type="submit">Sign out</button>
+          </form>
         </section>
+        {query.logout === 'failed' && <p role="alert" className="auth-error upload-alert">Couldn’t sign out. Try again.</p>}
+
+        <div className="account-grid">
+          <section className="account-tile account-calendar" aria-labelledby="connection-heading">
+            <div className="tile-head">
+              <span className="tile-icon" aria-hidden="true">📅</span>
+              <h2 id="connection-heading">Google Calendar</h2>
+              <span className={`status-pill ${connected ? 'is-on' : 'is-off'}`}>{connected ? '● Connected' : '● Not connected'}</span>
+            </div>
+            <p>{connected
+              ? 'You’re all set. You can see your schedule while reviewing events and add plans in one click.'
+              : 'Connect your Google Calendar to see your schedule next to each event and add plans in one click.'}</p>
+            {query.calendar === 'save-failed' && <p role="alert" className="auth-error">Your calendar connection couldn’t be saved. Please try connecting again.</p>}
+            {query.calendar === 'disconnect-failed' && <p role="alert" className="auth-error">Couldn’t disconnect your calendar. Please try again.</p>}
+            <div className="tile-actions">
+              <form action={connectGoogleCalendar}>
+                {connected
+                  ? <button className="ghost-button" type="submit">Reconnect or switch account</button>
+                  : <GoogleButton>Connect Google Calendar</GoogleButton>}
+              </form>
+              {savedConnection && <form action={disconnectGoogleCalendar}><button className="text-button" type="submit">Disconnect</button></form>}
+            </div>
+            <p className="tile-fineprint">🔒 Access is limited to events on calendars you own. Your connection is encrypted.</p>
+          </section>
+
+          <section className="account-tile account-plan" aria-labelledby="plan-heading">
+            <div className="tile-head">
+              <span className="tile-icon" aria-hidden="true">☕</span>
+              <h2 id="plan-heading">Your plan</h2>
+            </div>
+            <p className="plan-price"><strong>$2.99</strong> / month</p>
+            <p>Subscriptions are coming soon. You haven’t been charged.</p>
+          </section>
+
+          <section className="account-tile account-links" aria-labelledby="links-heading">
+            <div className="tile-head">
+              <span className="tile-icon" aria-hidden="true">⚡</span>
+              <h2 id="links-heading">Jump back in</h2>
+            </div>
+            <Link className="quick-link" href="/upload"><span aria-hidden="true">📸</span><div><strong>Upload screenshots</strong>Turn new plans into events</div><b aria-hidden="true">→</b></Link>
+            <Link className="quick-link" href="/calendar"><span aria-hidden="true">🗓️</span><div><strong>View your calendar</strong>See what’s coming up</div><b aria-hidden="true">→</b></Link>
+          </section>
+        </div>
       </main>
     </div>
   );
