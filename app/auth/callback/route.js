@@ -23,15 +23,18 @@ export async function GET(request) {
       const jar = await cookies();
       const destination = jar.get('oauth-destination')?.value;
       jar.delete('oauth-destination');
-      const calendarConnect = destination === 'calendar' || destination === 'calendar-upload';
+      const calendarConnect = ['calendar', 'calendar-upload', 'calendar-welcome'].includes(destination);
       if (calendarConnect) {
         try {
           await saveCalendarConnection(client, data.session);
         } catch {
-          redirect('/account?calendar=save-failed');
+          redirect(destination === 'calendar-welcome' ? '/welcome?calendar=save-failed' : '/account?calendar=save-failed');
         }
       }
       if (destination === 'calendar-upload') redirect('/upload?calendar=connected');
+      if (destination === 'calendar-welcome') redirect('/welcome?calendar=connected');
+      // New accounts go through first-time setup (connect calendar, choose colors).
+      if (!calendarConnect && !data.session?.user?.user_metadata?.onboarded) redirect('/welcome');
       redirect(destination === 'calendar' ? '/calendar' : '/upload');
     }
     console.error('Google sign-in session exchange failed', {

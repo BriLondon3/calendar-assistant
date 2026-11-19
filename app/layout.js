@@ -1,4 +1,6 @@
 import './globals.css';
+import { getCurrentUser } from './auth-client';
+import { validTheme } from './themes';
 
 const siteUrl = process.env.SITE_URL || 'https://calendar-assistant-tau.vercel.app';
 
@@ -17,6 +19,9 @@ export const metadata = {
 
 export const viewport = { themeColor: '#faf7f1' };
 
-export default function RootLayout({ children }) {
-  return <html lang="en"><body>{children}</body></html>;
+// Signed-in users see the color theme they chose; everyone else sees the brand default.
+export default async function RootLayout({ children }) {
+  const user = await getCurrentUser().catch(() => null);
+  const theme = validTheme(user?.user_metadata?.theme);
+  return <html lang="en" data-theme={theme}><body>{children}</body></html>;
 }

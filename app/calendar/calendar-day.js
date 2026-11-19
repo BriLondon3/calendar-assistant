@@ -150,7 +150,7 @@ function DayTimeline({ events, previews, date, timeZone, timelineRef, onRemove, 
     if (event.proposed) {
       // Tint the dashed preview with the color picked during review.
       const picked = googleColor(event.colorId);
-      return picked ? { borderColor: picked.hex, backgroundColor: `${picked.hex}26`, color: '#172536' } : {};
+      return picked ? { borderColor: picked.hex, backgroundColor: `${picked.hex}26`, color: 'var(--ink)' } : {};
     }
     return { backgroundColor: event.backgroundColor || '#039be5', color: readableTextColor(event.backgroundColor) };
   }

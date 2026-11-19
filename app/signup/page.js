@@ -19,7 +19,7 @@ const errorMessages = {
 const NEXT_STEPS = [
   { title: 'Sign in with Google', copy: 'No new password to remember.' },
   { title: 'Connect your Google Calendar', copy: 'One tap, so you can see your schedule and add plans.' },
-  { title: 'Upload your first screenshots', copy: 'From your phone or laptop. We’ll find the events.' },
+  { title: 'Choose your colors', copy: 'Pick the look you like. Then start uploading screenshots.' },
 ];
 
 export default async function SignupPage({ searchParams }) {

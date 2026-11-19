@@ -20,7 +20,8 @@ async function startGoogleSignIn(calendarAccess = false, returnTo = 'calendar') 
   const client = await createWritableAuthClient();
   const jar = await cookies();
   // Where to land after Google: calendar connections made during setup return to /upload.
-  const destination = calendarAccess ? (returnTo === 'upload' ? 'calendar-upload' : 'calendar') : 'upload';
+  const calendarDestinations = { upload: 'calendar-upload', welcome: 'calendar-welcome' };
+  const destination = calendarAccess ? (calendarDestinations[returnTo] || 'calendar') : 'upload';
   jar.set('oauth-destination', destination, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -63,6 +64,15 @@ export async function connectCalendarDuringSetup() {
   const { data: { user } } = await client.auth.getUser();
   if (!user) redirect('/signup?mode=login');
   await startGoogleSignIn(true, 'upload');
+}
+
+// Used by the first-time setup page: connect, then come back to /welcome.
+export async function connectCalendarDuringWelcome() {
+  if (!authConfigured()) redirect('/signup');
+  const client = await createWritableAuthClient();
+  const { data: { user } } = await client.auth.getUser();
+  if (!user) redirect('/signup?mode=login');
+  await startGoogleSignIn(true, 'welcome');
 }
 
 export async function disconnectGoogleCalendar() {

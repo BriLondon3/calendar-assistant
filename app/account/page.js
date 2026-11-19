@@ -7,6 +7,8 @@ import { savedCalendarConfigured, hasCalendarConnection } from '../calendar-conn
 import SiteHeader from '../components/site-header';
 import ProfilePhoto from '../components/profile-photo';
 import GoogleButton from '../signup/google-button';
+import ThemePicker from '../components/theme-picker';
+import { validTheme } from '../themes';
 
 export const dynamic = 'force-dynamic';
 
@@ -60,6 +62,15 @@ export default async function AccountPage({ searchParams }) {
               {savedConnection && <form action={disconnectGoogleCalendar}><button className="text-button" type="submit">Disconnect</button></form>}
             </div>
             <p className="tile-fineprint">🔒 Access is limited to events on calendars you own. Your connection is encrypted.</p>
+          </section>
+
+          <section className="account-tile account-appearance" aria-labelledby="appearance-heading">
+            <div className="tile-head">
+              <span className="tile-icon" aria-hidden="true">🎨</span>
+              <h2 id="appearance-heading">Your colors</h2>
+            </div>
+            <p>Pick the color theme you see when you’re logged in. Hover over one to preview it.</p>
+            <ThemePicker current={validTheme(user.user_metadata?.theme)} />
           </section>
 
           <section className="account-tile account-plan" aria-labelledby="plan-heading">
