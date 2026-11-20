@@ -7,7 +7,7 @@
 .auth-back:hover { color: var(--link); }
 
 .auth-layout { flex: 1; width: 100%; max-width: 1120px; margin: 0 auto; padding: 24px 24px 64px; display: grid; grid-template-columns: minmax(0, 480px) minmax(0, 1fr); gap: 48px; align-items: center; }
-.auth-panel { padding: 36px; border: 2px solid var(--frame); border-radius: 28px; background: var(--surface); box-shadow: 8px 8px 0 var(--ink); }
+.auth-panel { padding: 36px; border: 2px solid var(--frame); border-radius: 28px; background: var(--surface); box-shadow: 8px 8px 0 var(--frame); }
 
 .auth-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; margin-bottom: 28px; border-radius: 14px; background: var(--surface-2); }
 .auth-tabs a { padding: 10px; border-radius: 10px; color: var(--muted); font-weight: 700; font-size: 15px; text-align: center; text-decoration: none; transition: background .15s, color .15s; }
@@ -33,7 +33,7 @@
 .auth-steps li { display: flex; gap: 16px; align-items: center; padding: 18px 20px; border-radius: 18px; background: var(--surface); border: 1px solid var(--line); font-size: 15px; line-height: 1.5; color: var(--muted); }
 .auth-steps li > span { display: grid; place-items: center; flex-shrink: 0; width: 38px; height: 38px; border-radius: 12px; background: var(--primary-soft); color: var(--primary); font-weight: 800; }
 .auth-steps li:nth-child(2) > span { background: var(--warm-soft); color: var(--warm-ink); }
-.auth-steps li:nth-child(3) > span { background: #e3f4ea; color: #236347; }
+.auth-steps li:nth-child(3) > span { background: var(--success-soft); color: var(--success-ink); }
 .auth-steps strong { display: block; color: var(--ink); font-size: 17px; }
 .auth-aside-note { margin: 22px 0 0; font-size: 15px; font-weight: 600; color: var(--ink); }
 
@@ -52,6 +52,6 @@
   .auth-topbar { height: 80px; padding: 0 16px; }
   .auth-back { display: none; }
   .auth-layout { padding: 0 16px 48px; }
-  .auth-panel { padding: 24px 20px; border-radius: 22px; box-shadow: 5px 5px 0 var(--ink); }
+  .auth-panel { padding: 24px 20px; border-radius: 22px; box-shadow: 5px 5px 0 var(--frame); }
   .auth-steps li { padding: 14px 16px; }
 }
