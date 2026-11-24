@@ -203,12 +203,30 @@ export default async function Home() {
         <section className="lp-wrap lp-deadlines" id="deadlines" aria-labelledby="deadlines-heading">
           <div className="lp-deadlines-copy">
             <p className="lp-eyebrow">For internship &amp; job season</p>
-            <h2 id="deadlines-heading">Never miss an application deadline again.</h2>
-            <p>Found a posting you want to apply to? Screenshot it. Booked and Busy puts the due date on your calendar and reminds you before it closes, so “I’ll apply this weekend” actually happens.</p>
-            <ul className="lp-deadline-sources" aria-label="Works with">
-              {['Handshake', 'LinkedIn', 'Your career center site', 'Workday', 'Recruiter emails'].map(source => <li key={source}>{source}</li>)}
-            </ul>
-            <p className="lp-deadline-note"><span aria-hidden="true">⚙️</span> Choose when you’re reminded (2 weeks, 1 week, 3 days, 2 days, or 1 day before) once in your account. Every deadline follows it.</p>
+            <h2 id="deadlines-heading">You’ll <span className="lp-never">never</span> miss an application again.</h2>
+            <p>Screenshot any posting you want to apply to, from Handshake, LinkedIn, your career center site, or a recruiter email. The due date goes straight on your calendar, with reminders before it closes.</p>
+
+            <div className="lp-perk">
+              <div className="lp-perk-head"><span aria-hidden="true">⏰</span><h3>Reminders when <em>you</em> want them</h3></div>
+              <p>Pick your timing once in your account. Every deadline follows it, at 9 AM.</p>
+              <ul className="lp-perk-chips" aria-label="Reminder options">
+                <li>2 weeks before</li>
+                <li className="is-on"><span aria-hidden="true">✓</span>1 week before</li>
+                <li>3 days before</li>
+                <li className="is-on"><span aria-hidden="true">✓</span>2 days before</li>
+                <li>1 day before</li>
+              </ul>
+            </div>
+
+            <div className="lp-perk">
+              <div className="lp-perk-head"><span aria-hidden="true">🔗</span><h3>Back to the job in one click</h3></div>
+              <p>No more digging through tabs to find the posting again.</p>
+              <ol className="lp-perk-steps">
+                <li><b>1</b>Open the deadline on your calendar</li>
+                <li><b>2</b>Click the job posting link</li>
+                <li><b>3</b>You’re back on the posting, ready to apply</li>
+              </ol>
+            </div>
           </div>
 
           <ol className="lp-deadline-story">
@@ -226,25 +244,29 @@ export default async function Home() {
               </div>
             </li>
             <li className="lp-story-step">
-              <p className="lp-story-label"><span>2</span>Same due date? They share one event</p>
+              <p className="lp-story-label"><span>2</span>They land on your calendar, together</p>
               <div className="lp-story-event" aria-hidden="true">
                 <div className="lp-story-date"><small>FRI</small><strong>15</strong><small>JAN</small></div>
                 <div className="lp-story-event-body">
                   <b>2 applications due: Deloitte, PwC</b>
                   <span>All day · on your Google Calendar</span>
                   <ul>
-                    <li>Deloitte – Audit &amp; Assurance Intern <u>posting ↗</u></li>
-                    <li>PwC – Tax Consulting Intern <u>posting ↗</u></li>
+                    <li><span>Deloitte – Audit &amp; Assurance Intern</span><u>Open posting ↗</u></li>
+                    <li><span>PwC – Tax Consulting Intern</span><u>Open posting ↗</u></li>
                   </ul>
                 </div>
               </div>
             </li>
             <li className="lp-story-step">
-              <p className="lp-story-label"><span>3</span>Get a heads-up before it closes</p>
+              <p className="lp-story-label"><span>3</span>Reminders show up when you asked</p>
               <div className="lp-story-pings" aria-hidden="true">
                 <div className="lp-ping"><i>🔔</i><div><b>Due in 1 week</b><span>2 applications: Deloitte, PwC</span></div><small>Fri 9:00 AM</small></div>
                 <div className="lp-ping lp-ping-urgent"><i>⏰</i><div><b>Due in 2 days!</b><span>Deloitte and PwC close Friday</span></div><small>Wed 9:00 AM</small></div>
               </div>
+            </li>
+            <li className="lp-story-win">
+              <span aria-hidden="true">🎉</span>
+              <div><b>Both applications submitted. Two days early.</b><span>Zero missed deadlines this recruiting season.</span></div>
             </li>
           </ol>
         </section>

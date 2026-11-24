@@ -474,12 +474,31 @@
 }
 
 /* Application deadlines */
+.lp-never { position: relative; white-space: nowrap; color: var(--primary); }
+.lp-never::after { content: ''; position: absolute; left: -2px; right: -2px; bottom: .02em; height: .16em; border-radius: 99px; background: var(--orange); opacity: .85; z-index: -1; }
+.lp-deadlines h2 { position: relative; isolation: isolate; }
+.lp-story-win { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 16px; background: var(--success-soft); border: 2px solid var(--success-border); }
+.lp-story-win > span { font-size: 24px; }
+.lp-story-win div { display: grid; gap: 2px; font-size: 13px; color: var(--success-ink); }
+.lp-story-win b { font-size: 15px; color: var(--success-ink); }
+.lp-perk { margin-top: 16px; padding: 20px 22px; border: 2px solid var(--frame); border-radius: 22px; background: var(--surface); }
+.lp-perk + .lp-perk { box-shadow: none; }
+.lp-perk-head { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+.lp-perk-head span { display: grid; place-items: center; flex-shrink: 0; width: 42px; height: 42px; border-radius: 13px; background: var(--warm-soft); font-size: 21px; }
+.lp-perk h3 { margin: 0; font-size: 20px; letter-spacing: -.4px; }
+.lp-perk h3 em { font-style: normal; color: var(--primary); }
+.lp-perk > p { margin: 0 0 14px; font-size: 15.5px; line-height: 1.55; color: var(--muted); }
+.lp-perk-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.lp-perk-chips li { display: inline-flex; align-items: center; gap: 6px; padding: 8px 13px; border: 2px solid var(--line); border-radius: 999px; font-size: 14px; font-weight: 700; color: var(--muted); }
+.lp-perk-chips li.is-on { border-color: var(--primary); background: var(--primary-soft); color: var(--ink); }
+.lp-perk-chips li span { color: var(--primary); font-weight: 800; }
+.lp-perk-steps { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.lp-perk-steps li { display: flex; align-items: center; gap: 12px; font-size: 15.5px; font-weight: 600; color: var(--ink); }
+.lp-perk-steps b { display: grid; place-items: center; flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%; background: var(--primary-soft); color: var(--primary); font-size: 14px; }
+.lp-perk-steps li:last-child b { background: var(--primary); color: var(--on-primary); }
 .lp-deadlines { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 56px; align-items: center; padding-top: 24px; padding-bottom: 96px; }
 .lp-deadlines h2 { margin: 0 0 18px; font-size: clamp(32px, 4.4vw, 48px); line-height: 1.08; letter-spacing: -1.6px; }
-.lp-deadlines-copy > p:not(.lp-eyebrow):not(.lp-deadline-note) { margin: 0 0 22px; font-size: 18px; line-height: 1.65; color: var(--muted); }
-.lp-deadline-sources { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 22px; padding: 0; list-style: none; }
-.lp-deadline-sources li { padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); font-size: 13.5px; font-weight: 700; color: var(--ink); }
-.lp-deadline-note { display: flex; gap: 10px; margin: 0; padding: 14px 16px; border-radius: 16px; background: var(--warm-soft); border: 1px solid var(--warm-border); font-size: 15px; line-height: 1.55; color: var(--warm-ink); }
+.lp-deadlines-copy > p:not(.lp-eyebrow) { margin: 0 0 22px; font-size: 18px; line-height: 1.65; color: var(--muted); }
 
 .lp-deadline-story { position: relative; display: grid; gap: 18px; margin: 0; padding: 26px; list-style: none; border: 2px solid var(--frame); border-radius: 28px; background: var(--surface-2); box-shadow: 8px 8px 0 var(--accent); }
 .lp-story-step { position: relative; }
@@ -502,8 +521,10 @@
 .lp-story-event-body { display: grid; gap: 2px; padding: 12px 14px; min-width: 0; font-size: 12.5px; color: var(--muted); }
 .lp-story-event-body b { color: var(--ink); font-size: 14.5px; }
 .lp-story-event-body ul { display: grid; gap: 3px; margin: 8px 0 0; padding: 8px 0 0; border-top: 1px solid var(--line); list-style: none; }
-.lp-story-event-body li::before { content: '• '; }
-.lp-story-event-body u { margin-left: 4px; color: var(--link); text-decoration-thickness: 1px; white-space: nowrap; }
+.lp-story-event-body ul { gap: 6px !important; }
+.lp-story-event-body li { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.lp-story-event-body li span { min-width: 0; }
+.lp-story-event-body u { flex-shrink: 0; padding: 4px 10px; border-radius: 999px; background: var(--primary); color: var(--on-primary); font-size: 11.5px; font-weight: 800; text-decoration: none; white-space: nowrap; }
 .lp-story-pings { display: grid; gap: 8px; }
 .lp-ping { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); box-shadow: 0 6px 18px #17253614; }
 .lp-ping i { font-style: normal; font-size: 20px; }
