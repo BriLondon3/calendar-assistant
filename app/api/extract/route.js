@@ -128,14 +128,19 @@ export async function POST(request) {
       signal: AbortSignal.timeout(55000),
       cache: 'no-store',
     });
+    // Google's own reason (e.g. "API key expired") says what to fix; it never contains the key.
+    let googleReason = '';
     if (!response.ok) {
-      console.error('Gemini extraction request failed', { status: response.status, model });
+      const body = await response.clone().json().catch(() => null);
+      googleReason = String(body?.error?.message || body?.error?.status || '').replace(/\s+/g, ' ').slice(0, 300);
+      console.error('Gemini extraction request failed', { status: response.status, model, reason: googleReason });
     }
+    const because = googleReason ? ` Google says: “${googleReason}”` : '';
     if (response.status === 402) return json({ error: 'Gemini requires billing or available credits on the Google AI Studio project for this API key. Check its billing status, then try again.' }, 402);
-    if (response.status === 404) return json({ error: 'The selected Gemini model isn’t available for this project. Please check the GEMINI_MODEL setting in Vercel.' }, 502);
+    if (response.status === 404) return json({ error: `The selected Gemini model (${model}) isn’t available for this project.${because} Please check the GEMINI_MODEL setting in Vercel.` }, 502);
     if (response.status === 429) return json({ error: 'The AI usage limit was reached. Check Gemini quota or billing, then try again later.' }, 429);
-    if (response.status === 400 || response.status === 401 || response.status === 403) return json({ error: 'Gemini rejected the request. Check the API key, model access, and billing in Google AI Studio.' }, 502);
-    if (!response.ok) return json({ error: `Gemini is unavailable right now (error ${response.status}). Try again shortly.` }, 502);
+    if (response.status === 400 || response.status === 401 || response.status === 403) return json({ error: `Gemini rejected the request (error ${response.status}).${because} Check the API key, model access, and billing in Google AI Studio.` }, 502);
+    if (!response.ok) return json({ error: `Gemini is unavailable right now (error ${response.status}). Try again shortly.${because}` }, 502);
     const data = await response.json();
     const candidate = data.candidates?.[0];
     if (candidate?.finishReason !== 'STOP') {
