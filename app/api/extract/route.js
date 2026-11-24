@@ -41,14 +41,19 @@ function normalizeEvent(event) {
   if (!event || typeof event !== 'object') return null;
   const clean = key => typeof event[key] === 'string' ? event[key].trim() : '';
   // Deadlines are marked in the title ("Application deadline: Company | Role")
-  // because extra schema fields make Google refuse the request.
-  const marked = clean('title').match(/^applications?\s+(?:deadline|due)\s*[:\-–—]\s*(.*)$/i);
-  const deadline = Boolean(marked);
+  // because extra schema fields make Google refuse the request. Gemini doesn't
+  // always follow that format exactly, so also accept the phrase anywhere in the
+  // title, or in the details of an event with no end time.
+  const phrase = /\b(?:applications?\s+(?:deadline|due|closes?)|apply\s+by|deadline\s+to\s+apply)\b/i;
+  const details = [clean('description'), ...(Array.isArray(event.notes) ? event.notes : [])].join(' ');
+  const deadline = phrase.test(clean('title')) || (phrase.test(details) && !clean('endTime'));
   let company = '';
   let role = '';
-  if (marked) {
-    const [first, ...rest] = marked[1].split('|').map(part => part.trim());
-    if (rest.length) { company = first; role = rest.join(' ').trim(); } else role = first;
+  if (deadline) {
+    // Drop the marker phrase and leftover separators, then split "Company | Role".
+    const rest = clean('title').replace(phrase, ' ').replace(/^[\s:|\-–—]+|[\s:|\-–—]+$/g, '').replace(/\s{2,}/g, ' ');
+    const [first, ...others] = rest.split('|').map(part => part.trim().replace(/^[:\-–—]\s*|\s*[:\-–—]$/g, ''));
+    if (others.length) { company = first; role = others.join(' ').trim(); } else role = first || '';
   }
   const fallbackTitle = [company, role].filter(Boolean).join(' – ') || 'Application deadline';
   event = { ...event, kind: deadline ? 'deadline' : 'event', title: deadline ? fallbackTitle : clean('title') };
