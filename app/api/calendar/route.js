@@ -3,6 +3,10 @@ import { authConfigured, createAuthClient, createWritableAuthClient } from '../.
 import { getCalendarAccess } from '../../calendar-connection';
 import { resolveEventColor } from '../../calendar/event-colors';
 import { isBookedAndBusyEvent, prepareCalendarEvent } from '../../calendar/event-insert';
+import { isDeadlineEventId, isDeadlineItemKey, validReminderDays } from '../../calendar/deadlines';
+import { changeDeadline } from '../../calendar/deadline-sync';
+
+const EVENTS = 'https://www.googleapis.com/calendar/v3/calendars/primary/events';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,14 +24,23 @@ export async function POST(request) {
   const { data: { user } } = await client.auth.getUser();
   if (!user) return json({ error: 'Please log in again.' }, 401);
   const draft = await request.json().catch(() => null);
-  const { event, error } = prepareCalendarEvent(draft);
+  const { event, deadline, error } = prepareCalendarEvent(draft);
   if (error) return json({ error }, 400);
 
   try {
     const access = await getCalendarAccess(client, user.id);
     if (access.error) return json({ error: access.error }, 503);
     if (!access.token) return json({ error: 'Connect Google Calendar before adding this event.', reconnect: true }, 403);
-    const endpoint = 'https://www.googleapis.com/calendar/v3/calendars/primary/events';
+    if (deadline) {
+      const response = await changeDeadline(access.token, deadline.eventId, deadline.key, deadline.value, {
+        reminderDays: validReminderDays(user.user_metadata?.deadlineReminders), colorId: deadline.colorId,
+      });
+      if (response.ok) return json({ added: true, eventId: deadline.eventId });
+      if (response.status === 401 || response.status === 403) return json({ error: 'Reconnect Google Calendar and allow access to add events.', reconnect: true }, 403);
+      if (response.status === 409) return json({ error: 'That day’s deadlines changed while saving. Try again.' }, 409);
+      return json({ error: 'Couldn’t confirm the deadline was added. Try again.' }, 502);
+    }
+    const endpoint = EVENTS;
     const headers = { Authorization: `Bearer ${access.token}`, 'Content-Type': 'application/json' };
     const response = await fetch(`${endpoint}?sendUpdates=none`, {
       method: 'POST', headers, body: JSON.stringify(event), signal: AbortSignal.timeout(15000), cache: 'no-store',
@@ -56,13 +69,21 @@ export async function DELETE(request) {
   const client = await createWritableAuthClient();
   const { data: { user } } = await client.auth.getUser();
   if (!user) return json({ error: 'Please log in again.' }, 401);
-  const { eventId } = (await request.json().catch(() => null)) || {};
+  const { eventId, itemKey } = (await request.json().catch(() => null)) || {};
   if (!isBookedAndBusyEvent(eventId)) return json({ error: 'Choose an event added through Booked and Busy.' }, 400);
+  if (itemKey !== undefined && (!isDeadlineEventId(eventId) || !isDeadlineItemKey(itemKey))) return json({ error: 'Choose a valid application deadline.' }, 400);
 
   try {
     const access = await getCalendarAccess(client, user.id);
     if (access.error) return json({ error: access.error }, 503);
     if (!access.token) return json({ error: 'Reconnect Google Calendar before removing this event.', reconnect: true }, 403);
+    if (itemKey) {
+      // Take one application off the day's deadline event (deleting it if it was the last).
+      const changed = await changeDeadline(access.token, eventId, itemKey, null, { reminderDays: validReminderDays(user.user_metadata?.deadlineReminders) });
+      if (changed.ok || changed.status === 404 || changed.status === 410) return json({ removed: true });
+      if (changed.status === 401 || changed.status === 403) return json({ error: 'Reconnect Google Calendar and allow access to remove events.', reconnect: true }, 403);
+      return json({ error: 'Couldn’t confirm the deadline was removed. Try again.' }, 502);
+    }
     const response = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${eventId}?sendUpdates=none`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${access.token}` },

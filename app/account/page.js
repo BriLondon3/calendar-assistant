@@ -9,6 +9,8 @@ import ProfilePhoto from '../components/profile-photo';
 import GoogleButton from '../signup/google-button';
 import ThemePicker from '../components/theme-picker';
 import { validTheme } from '../themes';
+import DeadlineReminders from '../components/deadline-reminders';
+import { validReminderDays } from '../calendar/deadlines';
 
 export const dynamic = 'force-dynamic';
 
@@ -71,6 +73,15 @@ export default async function AccountPage({ searchParams }) {
             </div>
             <p>Pick the color theme you see when you’re logged in. Hover over one to preview it.</p>
             <ThemePicker current={validTheme(user.user_metadata?.theme)} />
+          </section>
+
+          <section className="account-tile account-deadlines" id="deadlines" aria-labelledby="deadlines-heading">
+            <div className="tile-head">
+              <span className="tile-icon" aria-hidden="true">💼</span>
+              <h2 id="deadlines-heading">Application deadlines</h2>
+            </div>
+            <p>Upload a screenshot of an internship or job posting and its due date becomes an all-day “applications due” event. Applications due the same day share one event, listed in its description.</p>
+            <DeadlineReminders current={validReminderDays(user.user_metadata?.deadlineReminders)} />
           </section>
 
           <section className="account-tile account-plan" aria-labelledby="plan-heading">

@@ -1,4 +1,5 @@
 import { validColorId } from './google-colors.js';
+import { deadlineEventId, deadlineItemKey, deadlineItemValue, deadlineLabel, isDeadlineEventId } from './deadlines.js';
 
 function validDate(value) {
   return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)
@@ -8,7 +9,7 @@ function validDate(value) {
 const validTime = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
 
 export function isBookedAndBusyEvent(id) {
-  return typeof id === 'string' && /^bb[0-9a-f]{32}$/.test(id);
+  return typeof id === 'string' && (/^bb[0-9a-f]{32}$/.test(id) || isDeadlineEventId(id));
 }
 
 export function prepareCalendarEvent(draft) {
@@ -17,6 +18,20 @@ export function prepareCalendarEvent(draft) {
   }
   const summary = typeof draft.title === 'string' ? draft.title.trim() : '';
   if (!summary || summary.length > 300 || !validDate(draft.date)) return { error: 'Enter an event name and a valid start date.' };
+  // Application deadlines join that day's shared all-day "applications due" event.
+  // The preview keeps its own id; `deadline` says where it really goes.
+  if (draft.kind === 'deadline') {
+    const id = `bb${draft.id.replaceAll('-', '').toLowerCase()}`;
+    const end = new Date(`${draft.date}T00:00:00Z`);
+    end.setUTCDate(end.getUTCDate() + 1);
+    return {
+      event: {
+        id, summary: `Application due: ${deadlineLabel(draft)}`, start: { date: draft.date }, end: { date: end.toISOString().slice(0, 10) },
+        ...(validColorId(draft.colorId) && { colorId: validColorId(draft.colorId) }),
+      },
+      deadline: { eventId: deadlineEventId(draft.date), key: deadlineItemKey(draft.id), value: deadlineItemValue(draft), colorId: validColorId(draft.colorId) },
+    };
+  }
   const lastDate = draft.endDate || draft.date;
   if (!validDate(lastDate) || lastDate < draft.date) return { error: 'Choose an end date on or after the start date.' };
 

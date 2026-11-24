@@ -24,7 +24,7 @@ const USE_CASES = [
   { emoji: '🏛️', title: 'Chapter life', copy: 'Chapter, homecoming week, philanthropy events, and every “mandatory, no excuses” post from your sorority or fraternity GroupMe.' },
   { emoji: '📣', title: 'Club & org life', copy: 'GBMs, division meetings, team check-ins, and the trip sign-up that’s due Friday.' },
   { emoji: '📋', title: 'Running the show', copy: 'On exec? Exec meetings, Zooms with your advisor, and event setup at 6 — everything you’re responsible for, in one place.' },
-  { emoji: '💼', title: 'Recruiting season', copy: 'Recruiter emails, job fairs, info sessions, and coffee chats, on your calendar before you forget to reply.' },
+  { emoji: '💼', title: 'Recruiting season', copy: 'Coffee chats, info sessions, and job fairs, plus application due dates collected into one all-day reminder per day, so no deadline sneaks up on you.' },
   { emoji: '📚', title: 'Class curveballs', copy: 'Rescheduled exams, review sessions, and office hours from professor emails and course announcements.' },
 ];
 
@@ -33,11 +33,13 @@ const FEATURES = [
   'Pulls out the title, date, time, place, and details',
   'Review side by side with your Google Calendar',
   'Edit, skip, or add each event in one click',
+  'Application deadlines grouped by day, with your reminders',
   'Remove anything you added by mistake',
   'Your review list syncs across your devices',
 ];
 
 const FAQS = [
+  { q: 'Can it track internship and job application deadlines?', a: 'Yes. Screenshot a posting or a recruiting email with a due date and it becomes an all-day “applications due” event. If another application is due the same day, it’s added to that same event, and the description lists each company and role. Pick when you get reminded (like a week and two days before) in your account.' },
   { q: 'What can I screenshot?', a: 'Anything with event details on it: GroupMe and Flare posts, texts, emails, Instagram stories, flyers, and posters. As long as the name, date, and time are visible in the image, Booked and Busy can read them. PNG, JPG, and WebP images up to 3 MB each work.' },
   { q: 'Does it add things to my calendar automatically?', a: 'No — nothing lands on your calendar without your OK. Every event goes into a review list first, next to that day on your calendar, so you can fix details, skip it, or add it with one click.' },
   { q: 'What if it reads something wrong?', a: 'Tap the pencil on any event to edit the name, dates, times, location, or description before you add it. If a detail was unclear in the screenshot, the event shows extraction notes so you know what to double-check.' },

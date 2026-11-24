@@ -2,6 +2,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import { authConfigured, createWritableAuthClient } from '../../auth-client';
 import { eventFingerprint } from '../../upload/review-events';
 import { validColorId } from '../../calendar/google-colors';
+import { deadlineEventId } from '../../calendar/deadlines';
 
 function json(body, status = 200) {
   return Response.json(body, { status, headers: { 'Cache-Control': 'private, no-store' } });
@@ -36,10 +37,14 @@ function details(value) {
     const input = value?.[key];
     return typeof input === 'string' && /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(input) ? input : null;
   };
+  const deadline = value?.kind === 'deadline';
+  const link = string('link', 500).trim();
   return {
+    // Application deadlines carry the company, role and link for the shared deadline event.
+    ...(deadline && { kind: 'deadline', company: string('company', 120), role: string('role', 200), link: /^https?:\/\/\S+$/i.test(link) ? link : '' }),
     title: string('title', 300), date: date('date'),
-    endDate: date('endDate'), startTime: time('startTime'),
-    endTime: time('endTime'), allDay: value?.allDay === true,
+    endDate: deadline ? null : date('endDate'), startTime: time('startTime'),
+    endTime: deadline ? null : time('endTime'), allDay: deadline || value?.allDay === true,
     location: string('location', 1000), description: string('description', 5000),
     notes: Array.isArray(value?.notes) ? value.notes.filter(note => typeof note === 'string').slice(0, 12).map(note => note.slice(0, 1000)) : [],
     // Chosen Google Calendar color, and whether the user skipped it (skips can be undone).
@@ -104,11 +109,16 @@ function update(request, remove) {
     if (!fields || typeof fields !== 'object') return json({ error: 'Send event changes.' }, 400);
     let event;
     if (fields.added === true) {
-      event = { ...row.event, added: true, calendarEventId: `bb${row.event.id.replaceAll('-', '')}` };
+      event = {
+        ...row.event, added: true,
+        calendarEventId: row.event.kind === 'deadline' && row.event.date ? deadlineEventId(row.event.date) : `bb${row.event.id.replaceAll('-', '')}`,
+      };
     } else if (fields.added === false && row.event.added) {
       event = { ...row.event, id: randomUUID(), added: false, calendarEventId: null };
     } else if (!row.event.added) {
-      event = { ...row.event, ...details({ ...row.event, ...fields }) };
+      // Spread over a copy without deadline fields so switching kinds drops them.
+      const { kind, company, role, link, ...base } = row.event;
+      event = { ...base, ...details({ ...row.event, ...fields }) };
     } else {
       return json({ error: 'Remove this event from Google Calendar before editing.' }, 409);
     }

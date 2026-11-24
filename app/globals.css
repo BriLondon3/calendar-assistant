@@ -542,3 +542,23 @@ footer strong{font-weight:600;color:var(--ink)}.footer-star{color:var(--warm);fo
   .welcome-step { padding: 20px; box-shadow: 4px 4px 0 var(--frame); }
 }
 @media (prefers-reduced-motion: reduce) { .theme-option, .theme-preview-frame img { transition: none; } }
+
+/* Application deadlines */
+.account-deadlines { grid-column: 1 / -1; }
+.account-deadlines .tile-icon { background: var(--warm-soft); }
+.deadline-reminders fieldset { margin: 0; padding: 0; border: 0; }
+.deadline-reminders legend { margin-bottom: 10px; font-size: 14px; font-weight: 800; color: var(--ink); }
+.reminder-options { display: flex; flex-wrap: wrap; gap: 8px; }
+.reminder-chip { display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px; border: 2px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--ink); font-size: 14px; font-weight: 700; cursor: pointer; transition: border-color .15s, background .15s; }
+.reminder-chip:hover { border-color: var(--frame); }
+.reminder-chip[data-on="true"] { border-color: var(--primary); background: var(--primary-soft); }
+.reminder-chip input { width: 16px; height: 16px; margin: 0; accent-color: var(--primary); }
+.reminder-chip:has(input:focus-visible) { outline: 3px solid var(--warm); outline-offset: 2px; }
+.reminder-summary { margin: 14px 0 12px; font-size: 14px; color: var(--muted); }
+.deadline-reminders .theme-status { flex: 1; min-width: 200px; }
+.deadline-badge { width: fit-content; align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; margin: 0 0 8px; padding: 4px 10px; border-radius: 999px; background: var(--warm-soft); border: 1px solid var(--warm-border); color: var(--warm-ink); font-size: 12px; font-weight: 800; letter-spacing: .3px; text-transform: uppercase; }
+.deadline-who strong { color: var(--ink); }
+.deadline-link { color: var(--link); font-weight: 700; }
+.deadline-hint { margin: 10px 0 0; padding: 10px 12px; border-radius: 12px; background: var(--surface-2); font-size: 13.5px; line-height: 1.5; color: var(--muted); }
+.deadline-hint a { color: var(--link); font-weight: 700; }
+.deadline-toggle { padding: 10px 12px; border-radius: 12px; background: var(--warm-soft); color: var(--warm-ink); font-weight: 700; }
