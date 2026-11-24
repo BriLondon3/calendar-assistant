@@ -11,6 +11,43 @@ import ThemePicker from '../components/theme-picker';
 import { validTheme } from '../themes';
 import DeadlineReminders from '../components/deadline-reminders';
 import { validReminderDays } from '../calendar/deadlines';
+import { FREE_EXTRACTIONS, planSummary, syncFromStripe } from '../billing';
+import { openBillingPortal, startCheckout } from './billing-actions';
+
+const formatDay = value => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+function PlanDetails({ plan }) {
+  if (!plan.configured) return <p>Subscriptions are coming soon. You haven’t been charged.</p>;
+  if (plan.unavailable) return <p>Couldn’t load your plan right now. Refresh to try again.</p>;
+  const manage = <form action={openBillingPortal}><button className="ghost-button" type="submit">Manage billing</button></form>;
+  if (plan.subscribed) {
+    const ending = plan.cancelAtPeriodEnd && plan.periodEnd;
+    return <>
+      {plan.status === 'trialing' && <p className="plan-status is-trial">Free trial{plan.trialEnd ? ` · ends ${formatDay(plan.trialEnd)}` : ''}</p>}
+      {plan.status === 'active' && <p className="plan-status is-on">● Active</p>}
+      {plan.status === 'past_due' && <p className="plan-status is-warn">Payment failed</p>}
+      <p>{plan.status === 'past_due'
+        ? 'Your last payment didn’t go through. Update your card to keep your subscription.'
+        : ending
+          ? `Your subscription is cancelled and ends on ${formatDay(plan.periodEnd)}. You can renew any time before then.`
+          : plan.status === 'trialing'
+            ? `Your first $2.99 charge is on ${plan.trialEnd ? formatDay(plan.trialEnd) : 'the day your trial ends'}. Cancel any time before then and you won’t be charged.`
+            : `Renews on ${plan.periodEnd ? formatDay(plan.periodEnd) : 'your next billing date'}. Update your card, see receipts, or cancel any time.`}</p>
+      <div className="tile-actions">{manage}</div>
+    </>;
+  }
+  return <>
+    <p className="plan-status is-off">{plan.status === 'canceled' ? 'Subscription ended' : 'Free'}</p>
+    <p>{plan.freeLeft > 0
+      ? `You have ${plan.freeLeft} of ${FREE_EXTRACTIONS} free screenshots left. `
+      : 'You’ve used your free screenshots. '}
+      {plan.trialAvailable ? 'Start a 7-day free trial for unlimited screenshots. Cancel any time before it ends and you won’t be charged.' : 'Subscribe for unlimited screenshots. Cancel any time.'}</p>
+    <div className="tile-actions">
+      <form action={startCheckout}><button className="primary-button" type="submit">{plan.trialAvailable ? 'Start 7-day free trial' : 'Subscribe'}</button></form>
+      {plan.hasCustomer && plan.status && manage}
+    </div>
+  </>;
+}
 
 export const dynamic = 'force-dynamic';
 
@@ -18,6 +55,8 @@ export default async function AccountPage({ searchParams }) {
   const user = await getCurrentUser();
   if (!user) redirect('/signup?mode=login');
   const query = await searchParams;
+  if (query.billing === 'success') await syncFromStripe(user.id);
+  const plan = await planSummary(user.id);
   const jar = await cookies();
   const client = createAuthClient({ getAll: () => jar.getAll(), setAll: () => {} });
   const connected = await hasCalendarConnection(client, user.id) === true;
@@ -41,6 +80,9 @@ export default async function AccountPage({ searchParams }) {
             <button className="ghost-button" type="submit">Sign out</button>
           </form>
         </section>
+        {query.billing === 'success' && <p className="setup-success" role="status">🎉 You’re subscribed. Thanks for keeping me caffeinated!</p>}
+        {query.billing === 'cancelled' && <p className="upload-alert" role="status">Checkout was cancelled. You haven’t been charged.</p>}
+        {query.billing === 'error' && <p role="alert" className="auth-error upload-alert">Couldn’t open billing. Please try again.</p>}
         {query.logout === 'failed' && <p role="alert" className="auth-error upload-alert">Couldn’t sign out. Try again.</p>}
 
         <div className="account-grid">
@@ -90,7 +132,7 @@ export default async function AccountPage({ searchParams }) {
               <h2 id="plan-heading">Your plan</h2>
             </div>
             <p className="plan-price"><strong>$2.99</strong> / month</p>
-            <p>Subscriptions are coming soon. You haven’t been charged.</p>
+            <PlanDetails plan={plan} />
           </section>
 
           <section className="account-tile account-links" aria-labelledby="links-heading">

@@ -6,13 +6,16 @@ import { connectCalendarDuringSetup } from '../signup/actions';
 import GoogleButton from '../signup/google-button';
 import SiteHeader from '../components/site-header';
 import ScreenshotPicker from './screenshot-picker';
+import { planSummary, syncFromStripe } from '../billing';
 
 export const dynamic = 'force-dynamic';
 
 export default async function UploadPage({ searchParams }) {
   const user = await getCurrentUser();
   if (!user) redirect('/signup?mode=login');
-  const { calendar } = await searchParams;
+  const { calendar, billing } = await searchParams;
+  if (billing === 'success') await syncFromStripe(user.id);
+  const plan = await planSummary(user.id);
 
   const jar = await cookies();
   const client = createAuthClient({ getAll: () => jar.getAll(), setAll: () => {} });
@@ -43,7 +46,10 @@ export default async function UploadPage({ searchParams }) {
             </div>
           </section>
         )}
-        <ScreenshotPicker />
+        {billing === 'success' && <p className="setup-success" role="status">🎉 You’re in! Your subscription is set up. Upload away.</p>}
+        {billing === 'cancelled' && <p className="upload-alert" role="status">Checkout was cancelled. You haven’t been charged.</p>}
+        {billing === 'error' && <p className="auth-error upload-alert" role="alert">Couldn’t open checkout. Please try again.</p>}
+        <ScreenshotPicker plan={plan.configured && !plan.unavailable ? plan : null} />
       </main>
     </div>
   );

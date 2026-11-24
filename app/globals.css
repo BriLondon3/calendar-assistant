@@ -562,3 +562,18 @@ footer strong{font-weight:600;color:var(--ink)}.footer-star{color:var(--warm);fo
 .deadline-hint { margin: 10px 0 0; padding: 10px 12px; border-radius: 12px; background: var(--surface-2); font-size: 13.5px; line-height: 1.5; color: var(--muted); }
 .deadline-hint a { color: var(--link); font-weight: 700; }
 .deadline-toggle { padding: 10px 12px; border-radius: 12px; background: var(--warm-soft); color: var(--warm-ink); font-weight: 700; }
+
+/* Billing */
+.paywall-card { display: flex; align-items: center; flex-wrap: wrap; gap: 18px 22px; margin: 0 0 24px; padding: 24px 26px; border: 2px solid var(--frame); border-radius: 22px; background: var(--surface); box-shadow: 6px 6px 0 var(--accent); }
+.paywall-card > div { flex: 1; min-width: 240px; }
+.paywall-card h2 { margin: 0 0 6px; font-size: 22px; letter-spacing: -.4px; }
+.paywall-card p { margin: 0; line-height: 1.6; color: var(--muted); }
+.paywall-card form { margin: 0; }
+.paywall-icon { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 16px; background: var(--warm-soft); font-size: 26px; }
+.free-left { margin: 0 0 16px; padding: 12px 16px; border-radius: 14px; background: var(--primary-soft); border: 1px solid var(--primary-soft-border); font-size: 14.5px; color: var(--ink); }
+.plan-status { display: inline-block; margin: 0 0 12px !important; padding: 5px 12px; border-radius: 999px; font-size: 13px; font-weight: 800; }
+.plan-status.is-on { background: var(--success-soft); color: var(--success-ink) !important; }
+.plan-status.is-trial { background: var(--primary-soft); color: var(--primary) !important; }
+.plan-status.is-warn { background: var(--warm-soft); color: var(--warm-ink) !important; }
+.plan-status.is-off { background: var(--surface-2); color: var(--muted) !important; }
+.account-plan form { margin: 0; }

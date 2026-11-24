@@ -33,7 +33,18 @@ To deploy later, import this repository into Vercel and use its Next.js defaults
 3. Set `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` in `.env.local` and in the Vercel project. Use the project URL and publishable key from Supabase. Set `SITE_URL` in Vercel to the production website origin, then redeploy. Restart the local dev server after changing `.env.local`.
 4. Test **Continue with Google** on the local site and then on the production domain. If your Google OAuth app is in Testing, use an account permitted by that app.
 
-The $2.99/month price is displayed on the site. Stripe checkout, subscription status, and billing are pending integration.
+## Payments (Stripe)
+
+Every account gets 3 free screenshot extractions. After that, a subscription is needed: $2.99/month, with a 7-day free trial the first time. Billing stays off, and everything stays free, until all four variables below are set in Vercel.
+
+1. **Database.** Run `supabase/billing.sql` in the Supabase SQL Editor. Copy a **secret key** from Supabase → Project Settings → API Keys and save it as `SUPABASE_SECRET_KEY` in Vercel. It is used only on the server and must never be exposed to the browser.
+2. **Product and price.** In Stripe → Product catalog, create a product "Booked and Busy" with a recurring price of $2.99 per month. Save the price ID (`price_...`) as `STRIPE_PRICE_ID`.
+3. **API key.** In Stripe → Developers → API keys, save the secret key (`sk_test_...` while testing) as `STRIPE_SECRET_KEY`.
+4. **Webhook.** In Stripe → Developers → Webhooks, add an endpoint for `SITE_URL` + `/api/stripe/webhook` with the events `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated` and `customer.subscription.deleted`. Save its signing secret (`whsec_...`) as `STRIPE_WEBHOOK_SECRET`.
+5. **Customer portal.** In Stripe → Settings → Billing → Customer portal, turn it on and allow customers to update payment methods, view invoices and cancel subscriptions.
+6. Redeploy. Test with card `4242 4242 4242 4242`, any future date and any CVC.
+
+To go live, repeat steps 2–4 in Stripe's live mode and replace the three Stripe values in Vercel.
 
 ## Google Calendar connection
 

@@ -1,4 +1,5 @@
 import { getCurrentUser } from '../../auth-client';
+import { FREE_EXTRACTIONS, refundExtraction, reserveExtraction } from '../../billing';
 
 export const maxDuration = 60;
 
@@ -137,6 +138,23 @@ export async function POST(request) {
   let timeZone = String(form.get('timeZone') || 'UTC');
   try { new Intl.DateTimeFormat('en', { timeZone }); } catch { timeZone = 'UTC'; }
 
+  // Free accounts get a few extractions; after that a subscription (or trial) is needed.
+  let reservation;
+  try {
+    reservation = await reserveExtraction(user.id);
+  } catch {
+    return json({ error: 'Couldn’t check your plan. Try again shortly.' }, 503);
+  }
+  if (!reservation.allowed) {
+    return json({ error: `You’ve used your ${FREE_EXTRACTIONS} free screenshots. Start your free trial to keep going.`, subscribe: true }, 402);
+  }
+  const response = await extract(bytes, mimeType, referenceDate, timeZone);
+  // A failed extraction doesn't cost a free screenshot.
+  if (!response.ok && reservation.free) await refundExtraction(user.id);
+  return response;
+}
+
+async function extract(bytes, mimeType, referenceDate, timeZone) {
   try {
     const model = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
     if (!/^[a-z0-9.-]+$/.test(model)) return json({ error: 'The AI model configuration needs attention.' }, 503);

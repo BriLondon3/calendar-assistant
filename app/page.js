@@ -40,6 +40,7 @@ const FEATURES = [
 
 const FAQS = [
   { q: 'Can it track internship and job application deadlines?', a: 'Yes. Screenshot a posting or a recruiting email with a due date and it becomes an all-day “applications due” event. If another application is due the same day, it’s added to that same event, and the description lists each company and role. Pick when you get reminded (like a week and two days before) in your account.' },
+  { q: 'How does the free trial work?', a: 'Your first 3 screenshots are free, no card needed. After that, start a 7-day free trial to keep going. You won’t be charged until the trial ends, and you can cancel any time from your account page before then. After the trial it’s $2.99 a month.' },
   { q: 'What can I screenshot?', a: 'Anything with event details on it: GroupMe and Flare posts, texts, emails, Instagram stories, flyers, and posters. As long as the name, date, and time are visible in the image, Booked and Busy can read them. PNG, JPG, and WebP images up to 3 MB each work.' },
   { q: 'Does it add things to my calendar automatically?', a: 'No — nothing lands on your calendar without your OK. Every event goes into a review list first, next to that day on your calendar, so you can fix details, skip it, or add it with one click.' },
   { q: 'What if it reads something wrong?', a: 'Tap the pencil on any event to edit the name, dates, times, location, or description before you add it. If a detail was unclear in the screenshot, the event shows extraction notes so you know what to double-check.' },
@@ -313,7 +314,7 @@ export default async function Home() {
                 {FEATURES.map(feature => <li key={feature}>{feature}</li>)}
               </ul>
               <Link className="primary-button lp-button-lg" href={startHref}>{user ? 'Upload screenshots' : 'Sign up with Google'}</Link>
-              <p className="lp-price-note">Works with Google Calendar today. More calendars coming.</p>
+              <p className="lp-price-note">Try 3 screenshots free, no card needed. Then a 7-day free trial, and cancel any time.</p>
             </div>
           </div>
         </section>

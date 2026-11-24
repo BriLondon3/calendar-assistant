@@ -62,7 +62,7 @@ export default async function SignupPage({ searchParams }) {
             <p className="auth-alert">Accounts are opening soon. Check back shortly.</p>
           )}
 
-          {!login && <p className="auth-price"><strong>$2.99/month</strong> · No card needed to get started</p>}
+          {!login && <p className="auth-price"><strong>3 free screenshots</strong> · No card needed · Then $2.99/month</p>}
 
           <p className="auth-switch">
             {login ? 'New to Booked and Busy? ' : 'Already have an account? '}

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import EventReview from './event-review';
+import { startCheckout } from '../account/billing-actions';
 
 async function queueRequest(method = 'GET', body) {
   const response = await fetch('/api/review', {
@@ -17,7 +18,8 @@ const MAX_FILES = 10;
 const MAX_BYTES = 3 * 1024 * 1024;
 const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
 
-export default function ScreenshotPicker() {
+// plan: billing summary from the server (null when billing isn't set up).
+export default function ScreenshotPicker({ plan = null }) {
   const [screenshots, setScreenshots] = useState([]);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -27,6 +29,8 @@ export default function ScreenshotPicker() {
   const reviewing = reviewOpen && events.length > 0;
   const [progress, setProgress] = useState('');
   const [syncError, setSyncError] = useState('');
+  const [freeLeft, setFreeLeft] = useState(plan?.freeLeft ?? null);
+  const [needsPlan, setNeedsPlan] = useState(plan?.configured && !plan.subscribed && plan.freeLeft === 0);
   const queueRevision = useRef(0);
   const writing = useRef(false);
   const unsavedExtractions = useRef(new Map());
@@ -165,7 +169,14 @@ export default function ScreenshotPicker() {
         if (!suggestions) {
           const response = await fetch('/api/extract', { method: 'POST', body: form, signal: controller.signal });
           const data = await response.json();
+          if (response.status === 402 && data.subscribe) {
+            // Out of free screenshots: stop here and show the free-trial card.
+            setNeedsPlan(true);
+            setScreenshots(current => current.map(item => item.id === image.id ? { ...item, status: 'ready' } : item));
+            break;
+          }
           if (!response.ok) throw new Error(data.error || 'Couldn’t process this screenshot.');
+          if (plan?.configured && !plan.subscribed) setFreeLeft(left => (left === null ? left : Math.max(left - 1, 0)));
           suggestions = data.events;
           unsavedExtractions.current.set(image.id, suggestions);
         }
@@ -204,6 +215,21 @@ export default function ScreenshotPicker() {
       </ol>
       {reviewing && <EventReview events={events} onUploadMore={() => setReviewOpen(false)} onChange={changeEvent} onReject={changeEvent} />}
       {error && <p className="auth-error upload-alert" role="alert">{error}</p>}
+      {needsPlan && !reviewing && (
+        <section className="paywall-card" aria-labelledby="paywall-heading">
+          <span className="paywall-icon" aria-hidden="true">☕</span>
+          <div>
+            <h2 id="paywall-heading">You’ve used your free screenshots</h2>
+            <p>{plan?.trialAvailable
+              ? 'Start your 7-day free trial to keep turning screenshots into plans. It’s $2.99/month after that, and you can cancel any time before the trial ends.'
+              : 'Subscribe for $2.99/month to keep turning screenshots into plans. Cancel any time.'}</p>
+          </div>
+          <form action={startCheckout}>
+            <input type="hidden" name="from" value="upload" />
+            <button className="primary-button" type="submit">{plan?.trialAvailable ? 'Start 7-day free trial' : 'Subscribe · $2.99/mo'}</button>
+          </form>
+        </section>
+      )}
       {syncError && <p className="upload-alert" role="status">{syncError} <button className="text-button" type="button" onClick={refreshQueue}>Retry sync</button></p>}
       <section hidden={reviewing} aria-labelledby="upload-heading">
         {waiting > 0 && (
@@ -256,6 +282,9 @@ export default function ScreenshotPicker() {
           <li><span aria-hidden="true">📍</span><div><strong>Include the location</strong>We’ll add it to the event for you.</div></li>
           <li><span aria-hidden="true">📱</span><div><strong>Upload on your phone</strong>Then review on your laptop. It all syncs.</div></li>
         </ul>
+        {freeLeft !== null && freeLeft > 0 && !needsPlan && (
+          <p className="free-left"><span aria-hidden="true">🎁</span> <strong>{freeLeft} free screenshot{freeLeft === 1 ? '' : 's'} left.</strong> Then start a 7-day free trial.</p>
+        )}
         {screenshots.length > 0 && (
           <ul className="screenshot-grid">
             {screenshots.map(image => (
@@ -277,7 +306,7 @@ export default function ScreenshotPicker() {
         {(ready > 0 || busy || progress) && (
           <div className="upload-actionbar">
             <p role="status">{progress || (ready > 0 ? `${ready} screenshot${ready === 1 ? '' : 's'} ready` : '')}</p>
-            {ready > 0 && <button className="primary-button" type="button" disabled={busy} onClick={extractEvents}>{busy ? 'Working…' : `Extract events from ${ready}`}</button>}
+            {ready > 0 && <button className="primary-button" type="button" disabled={busy || needsPlan} onClick={extractEvents}>{busy ? 'Working…' : `Extract events from ${ready}`}</button>}
           </div>
         )}
         <p className="visually-hidden" aria-live="polite">{screenshots.length > 0 && `${screenshots.length} screenshot${screenshots.length === 1 ? '' : 's'} selected`}</p>
