@@ -416,6 +416,8 @@ export default async function Home() {
           <a href="#pricing">Pricing</a>
           <a href="#faq">FAQ</a>
           <Link href={user ? '/account' : '/signup?mode=login'}>{user ? 'Your account' : 'Log in'}</Link>
+          <Link href="/privacy">Privacy</Link>
+          <Link href="/terms">Terms</Link>
         </nav>
         <p className="lp-footer-meta"><span>Thoughtfully made by <strong>Bri London</strong></span><span>Make time for the good things. <span className="footer-star">✳</span></span></p>
       </footer>

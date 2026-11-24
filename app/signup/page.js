@@ -69,7 +69,7 @@ export default async function SignupPage({ searchParams }) {
             <Link href={login ? '/signup' : '/signup?mode=login'}>{login ? 'Create an account' : 'Log in'}</Link>
           </p>
 
-          <p className="auth-fineprint">🔒 We only ask for Calendar access when you connect it, and nothing goes on your calendar without your OK.</p>
+          <p className="auth-fineprint">🔒 We only ask for Calendar access when you connect it, and nothing goes on your calendar without your OK. By continuing, you agree to our <Link href="/terms">Terms</Link> and <Link href="/privacy">Privacy Policy</Link>.</p>
         </section>
 
         <aside className="auth-aside" aria-label={login ? 'Picking up where you left off' : 'What happens next'}>
