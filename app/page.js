@@ -244,24 +244,18 @@ export default async function Home() {
               </div>
             </li>
             <li className="lp-story-step">
-              <p className="lp-story-label"><span>2</span>They land on your calendar, together</p>
-              <div className="lp-story-event" aria-hidden="true">
-                <div className="lp-story-date"><small>FRI</small><strong>15</strong><small>JAN</small></div>
-                <div className="lp-story-event-body">
-                  <b>2 applications due: Deloitte, PwC</b>
-                  <span>All day · on your Google Calendar</span>
-                  <ul>
-                    <li><span>Deloitte – Audit &amp; Assurance Intern</span><u>Open posting ↗</u></li>
-                    <li><span>PwC – Tax Consulting Intern</span><u>Open posting ↗</u></li>
-                  </ul>
-                </div>
+              <p className="lp-story-label"><span>2</span>One calendar event for both</p>
+              <div className="lp-simple-event" aria-hidden="true">
+                <b>📌 2 applications due</b>
+                <span>Fri, Jan 15 · All day</span>
+                <div className="lp-simple-links"><u>Deloitte posting ↗</u><u>PwC posting ↗</u></div>
               </div>
             </li>
             <li className="lp-story-step">
-              <p className="lp-story-label"><span>3</span>Reminders show up when you asked</p>
-              <div className="lp-story-pings" aria-hidden="true">
-                <div className="lp-ping"><i>🔔</i><div><b>Due in 1 week</b><span>2 applications: Deloitte, PwC</span></div><small>Fri 9:00 AM</small></div>
-                <div className="lp-ping lp-ping-urgent"><i>⏰</i><div><b>Due in 2 days!</b><span>Deloitte and PwC close Friday</span></div><small>Wed 9:00 AM</small></div>
+              <p className="lp-story-label"><span>3</span>A reminder when you want it</p>
+              <div className="lp-simple-ping" aria-hidden="true">
+                <i>🔔</i>
+                <div><b>2 applications due in 2 days</b><span>Deloitte and PwC close Friday</span></div>
               </div>
             </li>
             <li className="lp-story-win">

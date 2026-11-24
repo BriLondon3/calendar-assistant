@@ -474,6 +474,15 @@
 }
 
 /* Application deadlines */
+.lp-simple-event { display: grid; gap: 2px; padding: 14px 16px; border-radius: 16px; background: #d50000; color: #ffffff; }
+.lp-simple-event b { font-size: 16px; }
+.lp-simple-event > span { font-size: 13px; opacity: .9; }
+.lp-simple-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.lp-simple-links u { padding: 5px 11px; border-radius: 999px; background: #ffffff; color: #b00000; font-size: 12.5px; font-weight: 800; text-decoration: none; }
+.lp-simple-ping { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); box-shadow: 0 6px 18px #17253614; }
+.lp-simple-ping i { font-style: normal; font-size: 22px; }
+.lp-simple-ping div { display: grid; gap: 2px; font-size: 13px; color: var(--muted); }
+.lp-simple-ping b { font-size: 15px; color: var(--ink); }
 .lp-never { position: relative; white-space: nowrap; color: var(--primary); }
 .lp-never::after { content: ''; position: absolute; left: -2px; right: -2px; bottom: .02em; height: .16em; border-radius: 99px; background: var(--orange); opacity: .85; z-index: -1; }
 .lp-deadlines h2 { position: relative; isolation: isolate; }
@@ -514,25 +523,6 @@
 .lp-job-card em { margin-top: 4px; font-style: normal; font-weight: 800; color: var(--warm-ink); }
 .lp-job-logo { display: grid; place-items: center; flex-shrink: 0; width: 32px; height: 32px; border-radius: 9px; background: var(--ink); color: var(--paper); font-style: normal; font-weight: 800; }
 .lp-job-logo-alt { background: var(--orange); color: var(--on-warm); }
-.lp-story-event { display: flex; overflow: hidden; border-radius: 16px; border: 1px solid var(--line); background: var(--surface); }
-.lp-story-date { display: grid; place-content: center; justify-items: center; gap: 0; width: 72px; flex-shrink: 0; background: #d50000; color: #ffffff; line-height: 1.1; }
-.lp-story-date small { font-size: 11px; font-weight: 800; letter-spacing: 1px; opacity: .9; }
-.lp-story-date strong { font-size: 28px; }
-.lp-story-event-body { display: grid; gap: 2px; padding: 12px 14px; min-width: 0; font-size: 12.5px; color: var(--muted); }
-.lp-story-event-body b { color: var(--ink); font-size: 14.5px; }
-.lp-story-event-body ul { display: grid; gap: 3px; margin: 8px 0 0; padding: 8px 0 0; border-top: 1px solid var(--line); list-style: none; }
-.lp-story-event-body ul { gap: 6px !important; }
-.lp-story-event-body li { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.lp-story-event-body li span { min-width: 0; }
-.lp-story-event-body u { flex-shrink: 0; padding: 4px 10px; border-radius: 999px; background: var(--primary); color: var(--on-primary); font-size: 11.5px; font-weight: 800; text-decoration: none; white-space: nowrap; }
-.lp-story-pings { display: grid; gap: 8px; }
-.lp-ping { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); box-shadow: 0 6px 18px #17253614; }
-.lp-ping i { font-style: normal; font-size: 20px; }
-.lp-ping div { flex: 1; display: grid; min-width: 0; font-size: 12.5px; color: var(--muted); }
-.lp-ping b { color: var(--ink); font-size: 14px; }
-.lp-ping small { font-size: 11.5px; font-weight: 700; color: var(--muted); white-space: nowrap; }
-.lp-ping-urgent { border-color: var(--warm-border); background: var(--warm-soft); }
-.lp-ping-urgent b { color: var(--warm-ink); }
 @media (max-width: 900px) {
   .lp-deadlines { grid-template-columns: 1fr; gap: 36px; padding-bottom: 64px; }
 }
@@ -540,5 +530,4 @@
   .lp-deadline-story { padding: 18px; box-shadow: 5px 5px 0 var(--accent); }
   .lp-story-shots { grid-template-columns: 1fr; }
   .lp-job-card:first-child, .lp-job-card:last-child { transform: none; }
-  .lp-story-date { width: 58px; }
 }
