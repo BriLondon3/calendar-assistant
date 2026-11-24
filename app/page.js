@@ -202,37 +202,51 @@ export default async function Home() {
         {/* Application deadlines */}
         <section className="lp-wrap lp-deadlines" id="deadlines" aria-labelledby="deadlines-heading">
           <div className="lp-deadlines-copy">
-            <p className="lp-eyebrow">Recruiting season, handled</p>
-            <h2 id="deadlines-heading">Every application deadline. One reminder per day.</h2>
-            <p>Screenshot an internship or job posting from Handshake, LinkedIn, your career center site, or a recruiter email. Booked and Busy spots the due date and turns it into an all-day “applications due” event.</p>
-            <ul className="lp-deadline-points">
-              <li><span aria-hidden="true">📚</span><div><strong>Same day? Same event.</strong> Three applications due Friday become one event, with each company and role listed in the description.</div></li>
-              <li><span aria-hidden="true">⏰</span><div><strong>Reminders you choose.</strong> A week before, two days before, the day before. Set it once in your account.</div></li>
-              <li><span aria-hidden="true">🔗</span><div><strong>Back to the posting in one tap.</strong> The link from your screenshot and the posting ID go right in the event.</div></li>
+            <p className="lp-eyebrow">For internship &amp; job season</p>
+            <h2 id="deadlines-heading">Never miss an application deadline again.</h2>
+            <p>Found a posting you want to apply to? Screenshot it. Booked and Busy puts the due date on your calendar and reminds you before it closes, so “I’ll apply this weekend” actually happens.</p>
+            <ul className="lp-deadline-sources" aria-label="Works with">
+              {['Handshake', 'LinkedIn', 'Your career center site', 'Workday', 'Recruiter emails'].map(source => <li key={source}>{source}</li>)}
             </ul>
+            <p className="lp-deadline-note"><span aria-hidden="true">⚙️</span> Choose when you’re reminded (2 weeks, 1 week, 3 days, 2 days, or 1 day before) once in your account. Every deadline follows it.</p>
           </div>
-          <div className="lp-deadline-art" aria-hidden="true">
-            <div className="lp-deadline-shots">
-              <div className="lp-deadline-shot"><b>Charles River Laboratories</b><span>Summer Intern – Microbiology</span><em>Application Deadline · Dec 14</em></div>
-              <div className="lp-deadline-shot"><b>UPMC</b><span>Corporate Digital Marketing Intern</span><em>Application Deadline · Dec 14</em></div>
-            </div>
-            <div className="lp-deadline-merge">↓</div>
-            <div className="lp-deadline-event">
-              <div className="lp-deadline-event-bar">
-                <strong>2 applications due: Charles River, UPMC</strong>
-                <span>Monday, December 14 · All day</span>
+
+          <ol className="lp-deadline-story">
+            <li className="lp-story-step">
+              <p className="lp-story-label"><span>1</span>Screenshot the postings you like</p>
+              <div className="lp-story-shots" aria-hidden="true">
+                <div className="lp-job-card">
+                  <i className="lp-job-logo">D</i>
+                  <div><b>Audit &amp; Assurance Intern</b><span>Deloitte · Summer 2027</span><em>Apply by Fri, Jan 15</em></div>
+                </div>
+                <div className="lp-job-card">
+                  <i className="lp-job-logo lp-job-logo-alt">P</i>
+                  <div><b>Tax Consulting Intern</b><span>PwC · Summer 2027</span><em>Apply by Fri, Jan 15</em></div>
+                </div>
               </div>
-              <ul className="lp-deadline-reminders">
-                <li>🔔 1 week before at 9 AM</li>
-                <li>🔔 2 days before at 9 AM</li>
-              </ul>
-              <div className="lp-deadline-desc">
-                <p>Applications due today:</p>
-                <p>• Charles River Laboratories – Summer Intern<br /><u>Job posting ↗</u></p>
-                <p>• UPMC – Digital Marketing Intern<br /><u>Job posting ↗</u></p>
+            </li>
+            <li className="lp-story-step">
+              <p className="lp-story-label"><span>2</span>Same due date? They share one event</p>
+              <div className="lp-story-event" aria-hidden="true">
+                <div className="lp-story-date"><small>FRI</small><strong>15</strong><small>JAN</small></div>
+                <div className="lp-story-event-body">
+                  <b>2 applications due: Deloitte, PwC</b>
+                  <span>All day · on your Google Calendar</span>
+                  <ul>
+                    <li>Deloitte – Audit &amp; Assurance Intern <u>posting ↗</u></li>
+                    <li>PwC – Tax Consulting Intern <u>posting ↗</u></li>
+                  </ul>
+                </div>
               </div>
-            </div>
-          </div>
+            </li>
+            <li className="lp-story-step">
+              <p className="lp-story-label"><span>3</span>Get a heads-up before it closes</p>
+              <div className="lp-story-pings" aria-hidden="true">
+                <div className="lp-ping"><i>🔔</i><div><b>Due in 1 week</b><span>2 applications: Deloitte, PwC</span></div><small>Fri 9:00 AM</small></div>
+                <div className="lp-ping lp-ping-urgent"><i>⏰</i><div><b>Due in 2 days!</b><span>Deloitte and PwC close Friday</span></div><small>Wed 9:00 AM</small></div>
+              </div>
+            </li>
+          </ol>
         </section>
 
         {/* Before / after */}
