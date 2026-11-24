@@ -199,6 +199,42 @@ export default async function Home() {
           </ul>
         </section>
 
+        {/* Application deadlines */}
+        <section className="lp-wrap lp-deadlines" id="deadlines" aria-labelledby="deadlines-heading">
+          <div className="lp-deadlines-copy">
+            <p className="lp-eyebrow">Recruiting season, handled</p>
+            <h2 id="deadlines-heading">Every application deadline. One reminder per day.</h2>
+            <p>Screenshot an internship or job posting from Handshake, LinkedIn, your career center site, or a recruiter email. Booked and Busy spots the due date and turns it into an all-day “applications due” event.</p>
+            <ul className="lp-deadline-points">
+              <li><span aria-hidden="true">📚</span><div><strong>Same day? Same event.</strong> Three applications due Friday become one event, with each company and role listed in the description.</div></li>
+              <li><span aria-hidden="true">⏰</span><div><strong>Reminders you choose.</strong> A week before, two days before, the day before. Set it once in your account.</div></li>
+              <li><span aria-hidden="true">🔗</span><div><strong>Back to the posting in one tap.</strong> The link from your screenshot and the posting ID go right in the event.</div></li>
+            </ul>
+          </div>
+          <div className="lp-deadline-art" aria-hidden="true">
+            <div className="lp-deadline-shots">
+              <div className="lp-deadline-shot"><b>Charles River Laboratories</b><span>Summer Intern – Microbiology</span><em>Application Deadline · Dec 14</em></div>
+              <div className="lp-deadline-shot"><b>UPMC</b><span>Corporate Digital Marketing Intern</span><em>Application Deadline · Dec 14</em></div>
+            </div>
+            <div className="lp-deadline-merge">↓</div>
+            <div className="lp-deadline-event">
+              <div className="lp-deadline-event-bar">
+                <strong>2 applications due: Charles River, UPMC</strong>
+                <span>Monday, December 14 · All day</span>
+              </div>
+              <ul className="lp-deadline-reminders">
+                <li>🔔 1 week before at 9 AM</li>
+                <li>🔔 2 days before at 9 AM</li>
+              </ul>
+              <div className="lp-deadline-desc">
+                <p>Applications due today:</p>
+                <p>• Charles River Laboratories – Summer Intern<br /><u>Job posting ↗</u></p>
+                <p>• UPMC – Digital Marketing Intern<br /><u>Job posting ↗</u></p>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Before / after */}
         <section className="lp-wrap lp-compare" aria-labelledby="compare-heading">
           <h2 id="compare-heading" className="visually-hidden">Before and after Booked and Busy</h2>
@@ -232,7 +268,7 @@ export default async function Home() {
               <p className="lp-eyebrow">Pricing</p>
               <h2 id="pricing-heading">Caffeinate me. I’ll organize your semester.</h2>
               <p>$2.99 a month is less than one cold brew. It keeps Booked and Busy running, and it keeps me caffeinated enough to keep making it better. You get every feature, and the next one I build.</p>
-              <p className="lp-pricing-sig">— Bri, founder &amp; chief coffee drinker ☕</p>
+              <p className="lp-pricing-sig">— Bri, Founder &amp; CCO (Chief Coffee Officer) ☕</p>
             </div>
             <div className="lp-price-card">
               <p className="lp-price-plan">Booked and Busy</p>

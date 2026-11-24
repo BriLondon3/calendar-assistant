@@ -472,3 +472,37 @@
   .demo-controls { flex-direction: column; align-items: stretch; }
   .demo-steps { flex-direction: column; }
 }
+
+/* Application deadlines */
+.lp-deadlines { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 56px; align-items: center; padding-top: 24px; padding-bottom: 96px; }
+.lp-deadlines h2 { margin: 0 0 18px; font-size: clamp(32px, 4.4vw, 48px); line-height: 1.08; letter-spacing: -1.6px; }
+.lp-deadlines-copy > p:not(.lp-eyebrow) { margin: 0 0 26px; font-size: 18px; line-height: 1.65; color: var(--muted); }
+.lp-deadline-points { display: grid; gap: 14px; margin: 0; padding: 0; list-style: none; }
+.lp-deadline-points li { display: flex; gap: 14px; align-items: flex-start; font-size: 16px; line-height: 1.55; color: var(--muted); }
+.lp-deadline-points li > span { display: grid; place-items: center; flex-shrink: 0; width: 42px; height: 42px; border-radius: 13px; background: var(--warm-soft); font-size: 20px; }
+.lp-deadline-points strong { display: block; color: var(--ink); font-size: 17px; }
+.lp-deadline-art { display: grid; gap: 12px; padding: 28px; border: 2px solid var(--frame); border-radius: 28px; background: var(--surface-2); box-shadow: 8px 8px 0 var(--accent); }
+.lp-deadline-shots { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.lp-deadline-shot { display: grid; gap: 3px; padding: 14px; border-radius: 16px; border: 1px solid var(--line); background: var(--surface); font-size: 12.5px; color: var(--muted); transform: rotate(-1.5deg); }
+.lp-deadline-shot + .lp-deadline-shot { transform: rotate(1.5deg); }
+.lp-deadline-shot b { color: var(--ink); font-size: 14px; }
+.lp-deadline-shot em { margin-top: 6px; font-style: normal; font-weight: 800; color: var(--warm-ink); }
+.lp-deadline-merge { justify-self: center; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--orange); color: var(--on-warm); font-size: 20px; font-weight: 800; }
+.lp-deadline-event { overflow: hidden; border-radius: 18px; border: 1px solid var(--line); background: var(--surface); }
+.lp-deadline-event-bar { display: grid; gap: 2px; padding: 14px 16px; background: #d50000; color: #ffffff; }
+.lp-deadline-event-bar strong { font-size: 15.5px; }
+.lp-deadline-event-bar span { font-size: 13px; opacity: .9; }
+.lp-deadline-reminders { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 14px 16px 0; list-style: none; }
+.lp-deadline-reminders li { padding: 5px 10px; border-radius: 999px; background: var(--primary-soft); color: var(--ink); font-size: 12.5px; font-weight: 700; }
+.lp-deadline-desc { padding: 12px 16px 16px; font-size: 13px; line-height: 1.5; color: var(--muted); }
+.lp-deadline-desc p { margin: 0 0 6px; }
+.lp-deadline-desc p:first-child { font-weight: 700; color: var(--ink); }
+.lp-deadline-desc u { color: var(--link); text-decoration-thickness: 1px; }
+@media (max-width: 900px) {
+  .lp-deadlines { grid-template-columns: 1fr; gap: 36px; padding-bottom: 64px; }
+}
+@media (max-width: 480px) {
+  .lp-deadline-art { padding: 18px; box-shadow: 5px 5px 0 var(--accent); }
+  .lp-deadline-shots { grid-template-columns: 1fr; }
+  .lp-deadline-shot, .lp-deadline-shot + .lp-deadline-shot { transform: none; }
+}
