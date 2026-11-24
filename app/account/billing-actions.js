@@ -13,7 +13,15 @@ async function siteUrl() {
 
 // Finds or creates the Stripe customer for this user and remembers it.
 async function customerFor(user, row) {
-  if (row.stripe_customer_id) return row.stripe_customer_id;
+  if (row.stripe_customer_id) {
+    // A customer saved in test mode doesn't exist in live mode (or may have
+    // been deleted in Stripe); make a new one in that case.
+    const existing = await stripe().customers.retrieve(row.stripe_customer_id).catch(error => {
+      if (error?.code === 'resource_missing') return null;
+      throw error;
+    });
+    if (existing && !existing.deleted) return existing.id;
+  }
   const customer = await stripe().customers.create({
     email: user.email,
     name: user.user_metadata?.full_name || undefined,
