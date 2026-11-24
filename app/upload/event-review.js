@@ -48,7 +48,7 @@ function EventEditor({ event, onSave, onCancel }) {
           <label>Due date<input {...field('date')} type="date" required /></label>
           <label>Due time (optional)<input {...field('startTime')} type="time" /></label>
         </div>
-        <label>Application link (optional)<input {...field('link')} type="url" maxLength={500} placeholder="https://" /></label>
+        <label>Job posting link (optional)<input {...field('link')} type="url" maxLength={500} placeholder="https://" /></label>
       </> : <>
       <div className="review-fields">
         <label>Start date<input {...field('date')} type="date" /></label>
@@ -292,7 +292,7 @@ export default function EventReview({ events, onChange, onReject, onUploadMore }
                       {event.location && <p className="review-date">{event.location}</p>}
                       </div>
                       {!event.added && <p className="review-color-label">{color ? <><i style={{ background: color.hex }} />{color.name}</> : 'Calendar default color'}</p>}
-                      {deadline && event.link && <p className="review-date"><a className="deadline-link" href={event.link} target="_blank" rel="noopener noreferrer">Application link ↗</a></p>}
+                      {deadline && (event.link || event.postingId) && <p className="review-date">{event.link && <a className="deadline-link" href={event.link} target="_blank" rel="noopener noreferrer">Open job posting ↗</a>}{event.link && event.postingId && ' · '}{event.postingId && `Posting ID ${event.postingId}`}</p>}
                       {event.description && <p className="review-description">{event.description}</p>}
                       {deadline && !event.added && event.date && <p className="deadline-hint">{sameDay.length
                         ? <>Joins your {shortDate(event.date)} deadlines with {sameDay.map(other => other.company || deadlineLabel(other)).join(', ')}.</>

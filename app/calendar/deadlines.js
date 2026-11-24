@@ -69,6 +69,7 @@ export function deadlineItemValue(draft) {
     title: (draft.title || '').trim().slice(0, 200),
     due: /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(draft.startTime || '') ? draft.startTime : '',
     link: safeLink(draft.link),
+    postingId: typeof draft.postingId === 'string' ? draft.postingId.replace(/[^A-Za-z0-9-]/g, '').slice(0, 40) : '',
   };
   let value = JSON.stringify(item);
   if (value.length > 1024) value = JSON.stringify({ ...item, link: '' });
@@ -115,7 +116,8 @@ export function buildDeadlineEvent({ date, props, reminderDays, colorId }) {
   const items = deadlineItems(props);
   const lines = items.map(item => {
     const due = item.due ? ` (due ${formatDue(item.due)})` : '';
-    return `• ${deadlineLabel(item)}${due}${item.link ? `\n  ${item.link}` : ''}`;
+    const id = item.postingId ? `\n  Posting ID: ${item.postingId}` : '';
+    return `• ${deadlineLabel(item)}${due}${id}${item.link ? `\n  Job posting: ${item.link}` : ''}`;
   });
   const description = [
     `${items.length === 1 ? 'Application' : 'Applications'} due today:`,

@@ -41,7 +41,10 @@ function details(value) {
   const link = string('link', 500).trim();
   return {
     // Application deadlines carry the company, role and link for the shared deadline event.
-    ...(deadline && { kind: 'deadline', company: string('company', 120), role: string('role', 200), link: /^https?:\/\/\S+$/i.test(link) ? link : '' }),
+    ...(deadline && {
+      kind: 'deadline', company: string('company', 120), role: string('role', 200),
+      link: /^https?:\/\/\S+$/i.test(link) ? link : '', postingId: string('postingId', 40).replace(/[^A-Za-z0-9-]/g, ''),
+    }),
     title: string('title', 300), date: date('date'),
     endDate: deadline ? null : date('endDate'), startTime: time('startTime'),
     endTime: deadline ? null : time('endTime'), allDay: deadline || value?.allDay === true,
@@ -117,7 +120,7 @@ function update(request, remove) {
       event = { ...row.event, id: randomUUID(), added: false, calendarEventId: null };
     } else if (!row.event.added) {
       // Spread over a copy without deadline fields so switching kinds drops them.
-      const { kind, company, role, link, ...base } = row.event;
+      const { kind, company, role, link, postingId, ...base } = row.event;
       event = { ...base, ...details({ ...row.event, ...fields }) };
     } else {
       return json({ error: 'Remove this event from Google Calendar before editing.' }, 409);
