@@ -18,6 +18,10 @@ const formatDay = value => new Date(value).toLocaleDateString('en-US', { month: 
 
 function PlanDetails({ plan }) {
   if (!plan.configured) return <p>Subscriptions are coming soon. You haven’t been charged.</p>;
+  if (plan.complimentary) return <>
+    <p className="plan-status is-on">★ Free forever</p>
+    <p>Your account has unlimited screenshots, no subscription needed.</p>
+  </>;
   if (plan.unavailable) return <p>Couldn’t load your plan right now. Refresh to try again.</p>;
   const manage = <form action={openBillingPortal}><button className="ghost-button" type="submit">Manage billing</button></form>;
   if (plan.subscribed) {
@@ -56,7 +60,7 @@ export default async function AccountPage({ searchParams }) {
   if (!user) redirect('/signup?mode=login');
   const query = await searchParams;
   if (query.billing === 'success') await syncFromStripe(user.id);
-  const plan = await planSummary(user.id);
+  const plan = await planSummary(user);
   const jar = await cookies();
   const client = createAuthClient({ getAll: () => jar.getAll(), setAll: () => {} });
   const connected = await hasCalendarConnection(client, user.id) === true;

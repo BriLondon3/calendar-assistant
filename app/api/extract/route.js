@@ -141,7 +141,7 @@ export async function POST(request) {
   // Free accounts get a few extractions; after that a subscription (or trial) is needed.
   let reservation;
   try {
-    reservation = await reserveExtraction(user.id);
+    reservation = await reserveExtraction(user);
   } catch {
     return json({ error: 'Couldn’t check your plan. Try again shortly.' }, 503);
   }

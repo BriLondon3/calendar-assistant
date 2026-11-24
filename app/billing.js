@@ -27,6 +27,15 @@ export function adminDb() {
   return admin;
 }
 
+// Accounts that never pay (e.g. the owner's): a comma-separated list of
+// emails in the FREE_ACCOUNT_EMAILS setting. Only verified emails count.
+export function isComplimentary(user) {
+  const email = user?.email?.trim().toLowerCase();
+  if (!email || !(user.email_confirmed_at || user.confirmed_at)) return false;
+  const list = (process.env.FREE_ACCOUNT_EMAILS || '').split(',').map(item => item.trim().toLowerCase()).filter(Boolean);
+  return list.includes(email);
+}
+
 // Stripe keeps charging/retrying during past_due, so keep access then too.
 const ACTIVE = new Set(['active', 'trialing', 'past_due']);
 
@@ -42,8 +51,10 @@ export async function getBilling(userId) {
 }
 
 // What the account and upload pages show about the plan.
-export async function planSummary(userId) {
+export async function planSummary(user) {
   if (!billingConfigured()) return { configured: false };
+  if (isComplimentary(user)) return { configured: true, complimentary: true, subscribed: true };
+  const userId = user.id;
   const row = await getBilling(userId).catch(() => null);
   if (!row) return { configured: true, unavailable: true };
   return {
@@ -60,8 +71,9 @@ export async function planSummary(userId) {
 }
 
 // Called before each extraction. Subscribers always pass; others use up a free one.
-export async function reserveExtraction(userId) {
-  if (!billingConfigured()) return { allowed: true };
+export async function reserveExtraction(user) {
+  if (!billingConfigured() || isComplimentary(user)) return { allowed: true };
+  const userId = user.id;
   const row = await getBilling(userId);
   if (isSubscribed(row)) return { allowed: true };
   const { data, error } = await adminDb().rpc('use_free_extraction', { p_user: userId, p_limit: FREE_EXTRACTIONS });

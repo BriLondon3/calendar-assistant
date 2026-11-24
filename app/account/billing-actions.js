@@ -3,7 +3,7 @@
 import { redirect, unstable_rethrow } from 'next/navigation';
 import { headers } from 'next/headers';
 import { getCurrentUser } from '../auth-client';
-import { adminDb, billingConfigured, getBilling, isSubscribed, stripe, TRIAL_DAYS } from '../billing';
+import { adminDb, billingConfigured, getBilling, isComplimentary, isSubscribed, stripe, TRIAL_DAYS } from '../billing';
 
 async function siteUrl() {
   if (process.env.SITE_URL) return process.env.SITE_URL.replace(/\/$/, '');
@@ -38,6 +38,7 @@ export async function startCheckout(formData) {
   if (!user) redirect('/signup?mode=login');
   if (!billingConfigured()) redirect('/account?billing=unavailable');
   const from = formData?.get('from') === 'upload' ? '/upload' : '/account';
+  if (isComplimentary(user)) redirect('/account');
   let url;
   try {
     const row = await getBilling(user.id);

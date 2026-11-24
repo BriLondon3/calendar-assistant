@@ -15,7 +15,7 @@ export default async function UploadPage({ searchParams }) {
   if (!user) redirect('/signup?mode=login');
   const { calendar, billing } = await searchParams;
   if (billing === 'success') await syncFromStripe(user.id);
-  const plan = await planSummary(user.id);
+  const plan = await planSummary(user);
 
   const jar = await cookies();
   const client = createAuthClient({ getAll: () => jar.getAll(), setAll: () => {} });

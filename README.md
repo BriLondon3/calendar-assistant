@@ -46,6 +46,8 @@ Every account gets 3 free screenshot extractions. After that, a subscription is 
 
 To go live, repeat steps 2–4 in Stripe's live mode and replace the three Stripe values in Vercel.
 
+To give an account unlimited free use (for example your own), add `FREE_ACCOUNT_EMAILS` in Vercel with its sign-in email. Separate several emails with commas. Only verified emails count, and those accounts never see the paywall.
+
 ## Google Calendar connection
 
 Enable the Google Calendar API in the Google Cloud project used for sign-in. While the OAuth app is in Testing, add your Google account under Audience → Test users. Under Data Access, configure `https://www.googleapis.com/auth/calendar.events.owned` for viewing and eventually adding events on owned calendars.
