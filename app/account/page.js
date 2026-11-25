@@ -84,7 +84,7 @@ export default async function AccountPage({ searchParams }) {
             <button className="ghost-button" type="submit">Sign out</button>
           </form>
         </section>
-        {query.billing === 'success' && <p className="setup-success" role="status">🎉 You’re subscribed. Thanks for keeping me caffeinated!</p>}
+        {query.billing === 'success' && <p className="setup-success setup-success-center" role="status">🎉 You’re subscribed!</p>}
         {query.billing === 'cancelled' && <p className="upload-alert" role="status">Checkout was cancelled. You haven’t been charged.</p>}
         {query.billing === 'error' && <p role="alert" className="auth-error upload-alert">Couldn’t open billing. Please try again.</p>}
         {query.logout === 'failed' && <p role="alert" className="auth-error upload-alert">Couldn’t sign out. Try again.</p>}
