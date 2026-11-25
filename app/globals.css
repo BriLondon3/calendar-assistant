@@ -577,3 +577,14 @@ footer strong{font-weight:600;color:var(--ink)}.footer-star{color:var(--warm);fo
 .plan-status.is-warn { background: var(--warm-soft); color: var(--warm-ink) !important; }
 .plan-status.is-off { background: var(--surface-2); color: var(--muted) !important; }
 .account-plan form { margin: 0; }
+
+/* Apply-by picker for postings without a deadline */
+.apply-by { margin: 10px 0 0; padding: 14px; border-radius: 14px; background: var(--warm-soft); border: 1px solid var(--warm-border); }
+.apply-by p { margin: 0 0 10px; font-size: 14px; line-height: 1.5; color: var(--warm-ink); }
+.apply-by p strong { color: var(--warm-ink); }
+.apply-by-options { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.apply-by-chip { padding: 8px 13px; border: 2px solid var(--frame); border-radius: 999px; background: var(--surface); color: var(--ink); font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; }
+.apply-by-chip:hover:not(:disabled) { background: var(--primary-soft); border-color: var(--primary); }
+.apply-by-chip.is-set { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
+.apply-by-chip:disabled { opacity: .6; cursor: wait; }
+.apply-by-date input { padding: 7px 10px; border: 2px solid var(--line-strong); border-radius: 999px; background: var(--surface); color: var(--ink); font: inherit; font-size: 13.5px; }

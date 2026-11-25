@@ -8,6 +8,34 @@ import { groupEventsByDay, proposedEventsForDay } from './review-events';
 import { GOOGLE_EVENT_COLORS, googleColor } from '../calendar/google-colors';
 import { deadlineItemKey, deadlineLabel } from '../calendar/deadlines';
 
+// Local YYYY-MM-DD for "today + days".
+function daysFromToday(days) {
+  const day = new Date();
+  day.setDate(day.getDate() + days);
+  return `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`;
+}
+
+// For postings without a deadline: let the user choose when they want to apply by.
+function ApplyByPicker({ disabled, onPick }) {
+  const [custom, setCustom] = useState('');
+  const quick = [['In 3 days', 3], ['In 1 week', 7], ['In 2 weeks', 14]];
+  return (
+    <div className="apply-by">
+      <p><strong>No deadline listed.</strong> When do you want to apply by? We’ll put it on your calendar with your reminders.</p>
+      <div className="apply-by-options">
+        {quick.map(([label, days]) => (
+          <button key={days} type="button" className="apply-by-chip" disabled={disabled} onClick={() => onPick(daysFromToday(days))}>{label}</button>
+        ))}
+        <label className="apply-by-date">
+          <span className="visually-hidden">Pick an apply-by date</span>
+          <input type="date" min={daysFromToday(0)} value={custom} disabled={disabled} onChange={e => setCustom(e.target.value)} />
+        </label>
+        {custom && <button type="button" className="apply-by-chip is-set" disabled={disabled} onClick={() => onPick(custom)}>Set {shortDate(custom)}</button>}
+      </div>
+    </div>
+  );
+}
+
 function shortDate(date) {
   return new Date(`${date}T12:00:00`).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
@@ -285,7 +313,7 @@ export default function EventReview({ events, onChange, onReject, onUploadMore }
                       <div className="review-event-meta">
                       {deadline && (event.company || event.role) && !(event.title || '').includes(event.company || event.role) && <p className="review-date deadline-who"><strong>{event.company || 'Company to confirm'}</strong>{event.role && ` · ${event.role}`}</p>}
                       <p className="review-date">
-                        {deadline && 'Due '}{event.date ? formatDate(event.date) : 'Date to confirm'}
+                        {deadline && event.date && 'Due '}{event.date ? formatDate(event.date) : deadline ? 'Apply-by date: not set' : 'Date to confirm'}
                         {event.endDate && event.endDate !== event.date && ` – ${formatDate(event.endDate)}`}
                       </p>
                       <p className="review-date">{deadline ? (event.startTime ? `Due by ${formatTime(event.startTime)} · all-day reminder` : 'All-day reminder') : event.allDay ? 'All day' : event.startTime ? `${formatTime(event.startTime)}${event.endTime ? ` – ${formatTime(event.endTime)}` : ' · End time to confirm'}` : 'Time to confirm'}</p>
@@ -294,6 +322,7 @@ export default function EventReview({ events, onChange, onReject, onUploadMore }
                       {!event.added && <p className="review-color-label">{color ? <><i style={{ background: color.hex }} />{color.name}</> : 'Calendar default color'}</p>}
                       {deadline && (event.link || event.postingId) && <p className="review-date">{event.link && <a className="deadline-link" href={event.link} target="_blank" rel="noopener noreferrer">Open job posting ↗</a>}{event.link && event.postingId && ' · '}{event.postingId && `Posting ID ${event.postingId}`}</p>}
                       {event.description && <p className="review-description">{event.description}</p>}
+                      {deadline && !event.added && !event.date && editingId !== event.id && <ApplyByPicker disabled={busy} onPick={date => saveReviewChange(event, { date })} />}
                       {deadline && !event.added && event.date && <p className="deadline-hint">{sameDay.length
                         ? <>Joins your {shortDate(event.date)} deadlines with {sameDay.map(other => other.company || deadlineLabel(other)).join(', ')}.</>
                         : <>Creates an all-day “applications due” event on {shortDate(event.date)}, with the reminders from <Link href="/account#deadlines">your account</Link>.</>}</p>}
@@ -303,7 +332,7 @@ export default function EventReview({ events, onChange, onReject, onUploadMore }
                         <EventEditor key={`${event.id}:${event.version}`} event={event} onCancel={() => setEditingId(null)} onSave={draft => saveReviewChange(event, draft)} />
                       ) : (
                         <div className="review-actions">
-                          <button className="primary-button" type="button" disabled={busy} onClick={() => updateCalendar(event)}>{addingId === event.id ? 'Adding…' : deadline ? 'Add to deadlines' : 'Add to calendar'}</button>
+                          {!(deadline && !event.date) && <button className="primary-button" type="button" disabled={busy} onClick={() => updateCalendar(event)}>{addingId === event.id ? 'Adding…' : deadline ? 'Add to deadlines' : 'Add to calendar'}</button>}
                           <button className="review-skip-button" type="button" disabled={busy} onClick={() => skipEvent(event)}>Skip this</button>
                         </div>
                       )}
